@@ -2,7 +2,7 @@
 using System.Collections;
 
 public static class Segment {
-	public static Mesh Generate(int segmentResolution, float radius, Vector3 xa, Vector3 xb, Vector3 ya, Vector3 yb, bool terrain=true) {
+	public static Mesh Generate(int segmentResolution, float radius, Vector3 xa, Vector3 xb, Vector3 ya, Vector3 yb, DisplacementLayer[] displace=null) {
 		Vector3[] newVertices = new Vector3[(segmentResolution+1)*(segmentResolution+1)];
 		//Vector2[] newUV;
 		int[] newTriangles = new int[segmentResolution*segmentResolution*3*2];
@@ -16,13 +16,17 @@ public static class Segment {
 					Vector3.Lerp(ya, yb, x/(float)segmentResolution),
 					y/(float)segmentResolution);
 
-				if (terrain) {
-					p = p.normalized;
-					var noise1 = Noise.Perlin(3f*p.x,3f*p.y,3f*p.z);
-					var noise2 = Noise.Perlin(11f*p.x,11f*p.y,11f*p.z);
-					var noise3 = Noise.Perlin(23f*p.x,23f*p.y,23f*p.z);
-					var noise4 = Noise.Perlin(71f*p.x,71f*p.y,71f*p.z);
-					newVertices[v] = p.normalized * (radius + (5f*noise1) + (3f*noise2) + (2f*noise3) + (1f*noise4));
+				if (displace != null) {
+					float maxHeight = 0f;
+					float addedHeight = 0f;
+					for (var i=0; i<displace.Length; i++) {
+						var d = displace[i];
+						var strength = 1f;
+						if (maxHeight > 0f) strength = d.heightStrength.Evaluate(addedHeight/maxHeight);
+						addedHeight += d.height * Noise.Perlin(d.detail*p.x,d.detail*p.y,d.detail*p.z) * strength;
+						maxHeight += d.height;
+					}
+					newVertices[v] = p.normalized * (radius + addedHeight);
 				} else newVertices[v] = p.normalized * radius;
 
 				if (x > 0 && y > 0) {

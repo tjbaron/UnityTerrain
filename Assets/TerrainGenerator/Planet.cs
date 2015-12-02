@@ -1,20 +1,32 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+public enum NOISE {Perlin,Worley}
+
+[System.Serializable]
+public class DisplacementLayer {
+	public NOISE noise;
+	public float height;
+	public float detail;
+	public AnimationCurve heightStrength;
+	public AnimationCurve equatorStrength;
+}
+
 public class Planet : MonoBehaviour {
 
 	public int segmentResolution = 32;
 	public float radius = 32f;
 	public Material material;
 	public Material waterMaterial;
+	public DisplacementLayer[] displacementLayers;
 
 	// Use this for initialization
 	void Start () {
-		MakeSphere(true, radius);
-		MakeSphere(false, radius+6f);
+		MakeSphere(radius, displacementLayers);
+		MakeSphere(radius+3f);
 	}
 
-	void MakeSphere(bool displace, float rad) {
+	void MakeSphere(float rad, DisplacementLayer[] displace=null) {
 		for (var i=0; i<6; i++) {
 			var go = new GameObject();
 			var mf = go.AddComponent<MeshFilter>();
@@ -57,7 +69,7 @@ public class Planet : MonoBehaviour {
 				new Vector3(0.5f,0.5f,-0.5f),
 				new Vector3(-0.5f,0.5f,-0.5f), displace);
 			}
-			if (displace) mr.sharedMaterial = material;
+			if (displace != null) mr.sharedMaterial = material;
 			else mr.sharedMaterial = waterMaterial;
 			mc.sharedMesh = mf.sharedMesh;
 			go.GetComponent<Transform>().parent = transform;
