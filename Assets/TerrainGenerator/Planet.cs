@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public enum NOISE {Perlin,Worley}
 
@@ -12,18 +13,27 @@ public class DisplacementLayer {
 	public AnimationCurve equatorStrength;
 }
 
+[ExecuteInEditMode]
 public class Planet : MonoBehaviour {
-
+	public bool updateTerrain = false;
 	public int segmentResolution = 32;
 	public float radius = 32f;
+	public float waterHeight = 2f;
 	public Material material;
 	public Material waterMaterial;
 	public DisplacementLayer[] displacementLayers;
 
 	// Use this for initialization
-	void Start () {
-		MakeSphere(radius, displacementLayers);
-		MakeSphere(radius+3f);
+	void Update () {
+		if (updateTerrain) {
+			var children = new List<GameObject>();
+			foreach (Transform child in transform) children.Add(child.gameObject);
+			children.ForEach(child => DestroyImmediate(child));
+
+			MakeSphere(radius, displacementLayers);
+			if (waterHeight > 0f) MakeSphere(radius+waterHeight);
+			updateTerrain = false;
+		}
 	}
 
 	void MakeSphere(float rad, DisplacementLayer[] displace=null) {

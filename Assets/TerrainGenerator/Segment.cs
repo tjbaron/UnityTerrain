@@ -4,7 +4,7 @@ using System.Collections;
 public static class Segment {
 	public static Mesh Generate(int segmentResolution, float radius, Vector3 xa, Vector3 xb, Vector3 ya, Vector3 yb, DisplacementLayer[] displace=null) {
 		Vector3[] newVertices = new Vector3[(segmentResolution+1)*(segmentResolution+1)];
-		//Vector2[] newUV;
+		Vector2[] newUV = new Vector2[(segmentResolution+1)*(segmentResolution+1)];
 		int[] newTriangles = new int[segmentResolution*segmentResolution*3*2];
 
 		
@@ -23,11 +23,16 @@ public static class Segment {
 						var d = displace[i];
 						var strength = 1f;
 						if (maxHeight > 0f) strength = d.heightStrength.Evaluate(addedHeight/maxHeight);
-						addedHeight += d.height * Noise.Perlin(d.detail*p.x,d.detail*p.y,d.detail*p.z) * strength;
+						if (d.noise == NOISE.Perlin) {
+							addedHeight += d.height * Noise.Perlin(d.detail*p.x,d.detail*p.y,d.detail*p.z) * strength;
+						} else {
+							addedHeight += d.height * Noise.Worley(d.detail*p.x,d.detail*p.y,d.detail*p.z) * strength;
+						}
 						maxHeight += d.height;
 					}
 					newVertices[v] = p.normalized * (radius + addedHeight);
 				} else newVertices[v] = p.normalized * radius;
+				newUV[v] = new Vector2(x/(float)segmentResolution, y/(float)segmentResolution);
 
 				if (x > 0 && y > 0) {
 					var i = ((x-1)*segmentResolution*6)+((y-1)*6);
@@ -44,6 +49,7 @@ public static class Segment {
 		Mesh mesh = new Mesh();
 		mesh.vertices = newVertices;
 		mesh.triangles = newTriangles;
+		mesh.uv = newUV;
 		mesh.RecalculateNormals();
 		return mesh;
 	}
