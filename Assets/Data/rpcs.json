@@ -1,0 +1,87 @@
+[
+	{
+		"name": "Connect",
+		"parameters": []
+	},
+	{
+		"name": "CreateShip",
+		"parameters": [
+			{
+				"name": "username",
+				"type": "String"
+			}
+		]
+	},
+	{
+		"name": "UpdateSpeed",
+		"parameters": [
+			{
+				"name": "username",
+				"type": "String"
+			},
+			{
+				"name": "speed",
+				"type": "Float"
+			}
+		]
+	},
+	{
+		"name": "UpdatePosition",
+		"parameters": [
+			{
+				"name": "username",
+				"type": "String"
+			},
+			{
+				"name": "x",
+				"type": "Float"
+			},
+			{
+				"name": "y",
+				"type": "Float"
+			},
+			{
+				"name": "z",
+				"type": "Float"
+			},
+			{
+				"name": "rx",
+				"type": "Float"
+			},
+			{
+				"name": "ry",
+				"type": "Float"
+			},
+			{
+				"name": "rz",
+				"type": "Float"
+			},
+			{
+				"name": "rw",
+				"type": "Float"
+			}
+		]
+	},
+	{
+		"name": "IsFiring",
+		"parameters": [
+			{
+				"name": "username",
+				"type": "String"
+			},
+			{
+				"name": "firing",
+				"type": "UInt16"
+			}
+		]
+	},
+	{
+		"name": "DestroyShip",
+		"parameters": [
+			{
+				"name": "username",
+				"type": "String"
+			}
+		]
+	}
+]
