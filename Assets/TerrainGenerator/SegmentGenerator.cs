@@ -2,7 +2,7 @@
 using System.Collections;
 
 public static class SegmentGenerator {
-	public static Mesh Generate(int segmentResolution, float radius, Vector3 xa, Vector3 xb, Vector3 ya, Vector3 yb, DisplacementLayer[] displace=null) {
+	public static IEnumerator Generate(int segmentResolution, float radius, Vector3 xa, Vector3 xb, Vector3 ya, Vector3 yb, DisplacementLayer[] displace, MeshFilter mf, MeshCollider mc) {
 		Vector3[] newVertices = new Vector3[(segmentResolution+1)*(segmentResolution+1)];
 		Vector2[] newUV = new Vector2[(segmentResolution+1)*(segmentResolution+1)];
 		int[] newTriangles = new int[segmentResolution*segmentResolution*3*2];
@@ -44,6 +44,7 @@ public static class SegmentGenerator {
 					newTriangles[i+5] = v-segmentResolution-1;
 				}
 			}
+			if (y%16==0) yield return null;
 		}
 
 		Mesh mesh = new Mesh();
@@ -51,6 +52,7 @@ public static class SegmentGenerator {
 		mesh.triangles = newTriangles;
 		mesh.uv = newUV;
 		mesh.RecalculateNormals();
-		return mesh;
+		mf.sharedMesh = mesh;
+		mc.sharedMesh = mf.sharedMesh;
 	}
 }

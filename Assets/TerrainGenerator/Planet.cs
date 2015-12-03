@@ -96,12 +96,17 @@ public class Planet : MonoBehaviour {
 			var children = new List<GameObject>();
 			foreach (Transform child in transform) children.Add(child.gameObject);
 			children.ForEach(child => DestroyImmediate(child));
-			MakeSphere();
+			if (Application.isPlaying) {
+				StartCoroutine(MakeSphere());
+			} else {
+				IEnumerator e = MakeSphere();
+    			while (e.MoveNext());
+			}
 			updateTerrain = false;
 		}
 	}
 
-	void MakeSphere() {
+	IEnumerator MakeSphere() {
 		for (var i=0; i<6; i++) {
 			var d = new SegmentData();
 			d.radius = radius;
@@ -116,7 +121,12 @@ public class Planet : MonoBehaviour {
 			var go = new GameObject();
 			go.GetComponent<Transform>().parent = transform;
 			var seg = go.AddComponent<Segment>();
-			seg.Generate(d);			
+			if (Application.isPlaying) {
+				yield return StartCoroutine(seg.Generate(d));
+			} else {
+				IEnumerator e = seg.Generate(d);
+    			while (e.MoveNext());
+			}
 		}
 	}
 }

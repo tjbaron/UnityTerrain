@@ -2,7 +2,7 @@
 using System.Collections;
 
 public class Segment : MonoBehaviour {
-	public void Generate(SegmentData d) {
+	public IEnumerator Generate(SegmentData d) {
 		var tl = d.topLeft.normalized * d.radius;
 		var tr = d.topRight.normalized * d.radius;
 		var bl = d.bottomLeft.normalized * d.radius;
@@ -19,20 +19,38 @@ public class Segment : MonoBehaviour {
 		
 		var size = Vector3.Distance(tl, br);
 
-		if (size > 5f && (dist < size/2f || dist1 < size/2f || dist2 < size/2f || dist3 < size/2f || dist4 < size/2f)) {
-			SubdivideSegment(d);
-		} else {
-			MakeSegment(d);
+		if (size > 0.5f && (dist < size || dist1 < size || dist2 < size || dist3 < size || dist4 < size)) {
+			// Subdivide the segment if it's close to the camera.
+			if (Application.isPlaying) {
+				yield return StartCoroutine(SubdivideSegment(d));
+			} else {
+				IEnumerator e = SubdivideSegment(d);
+    			while (e.MoveNext());
+			}
+		} else if (dist < 15f || dist1 < 15f || dist2 < 15f || dist3 < 15f || dist4 < 15f) {
+			// Draw the segment if it doesn't need more subdividing
+			// and is facing the camera and is within our view distance.
+			if (Application.isPlaying) {
+				yield return StartCoroutine(MakeSegment(d));
+			} else {
+				IEnumerator e = MakeSegment(d);
+    			while (e.MoveNext());
+			}
 			if (d.waterHeight > 0f) {
 				var go = new GameObject();
 				go.GetComponent<Transform>().parent = transform;
 				var seg = go.AddComponent<Segment>();
-				seg.MakeSegment(d, true);
+				if (Application.isPlaying) {
+					yield return StartCoroutine(seg.MakeSegment(d, true));
+				} else {
+					IEnumerator e = seg.MakeSegment(d, true);
+	    			while (e.MoveNext());
+				}
 			}
 		}
 	}
 
-	void SubdivideSegment(SegmentData d) {
+	IEnumerator SubdivideSegment(SegmentData d) {
 		// Find the 5 points that split this quad into 4 more.
 		var top = (d.topLeft+d.topRight)/2f;
 		var right = (d.topRight+d.bottomRight)/2f;
@@ -52,25 +70,42 @@ public class Segment : MonoBehaviour {
 			var go = new GameObject();
 			go.GetComponent<Transform>().parent = transform;
 			var seg = go.AddComponent<Segment>();
-			seg.Generate(d2);
+			if (Application.isPlaying) {
+				yield return StartCoroutine(seg.Generate(d2));
+			} else {
+				IEnumerator e = seg.Generate(d2);
+    			while (e.MoveNext());
+			}
 		}
 	}
 
-	public void MakeSegment(SegmentData d, bool isWater=false) {
+	public IEnumerator MakeSegment(SegmentData d, bool isWater=false) {
 		var mf = gameObject.AddComponent<MeshFilter>();
 		var mr = gameObject.AddComponent<MeshRenderer>();
 		var mc = gameObject.AddComponent<MeshCollider>();
 
-		mf.sharedMesh = SegmentGenerator.Generate(d.resolution,
-			isWater?d.radius+d.waterHeight:d.radius, 
-			d.topLeft, 
-			d.topRight,
-			d.bottomLeft,
-			d.bottomRight,
-			isWater?null:d.displace);
+		if (Application.isPlaying) {
+			yield return StartCoroutine(SegmentGenerator.Generate(d.resolution,
+				isWater?d.radius+d.waterHeight:d.radius, 
+				d.topLeft, 
+				d.topRight,
+				d.bottomLeft,
+				d.bottomRight,
+				isWater?null:d.displace,
+				mf, mc));
+		} else {
+			IEnumerator e = SegmentGenerator.Generate(d.resolution,
+				isWater?d.radius+d.waterHeight:d.radius, 
+				d.topLeft, 
+				d.topRight,
+				d.bottomLeft,
+				d.bottomRight,
+				isWater?null:d.displace,
+				mf, mc);
+			while (e.MoveNext());
+		}
 
 		if (isWater) mr.sharedMaterial = d.waterMaterial;
 		else mr.sharedMaterial = d.mainMaterial;
-		mc.sharedMesh = mf.sharedMesh;
 	}
 }
