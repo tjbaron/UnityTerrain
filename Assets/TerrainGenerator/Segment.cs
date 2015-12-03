@@ -24,9 +24,9 @@ public static class Segment {
 						var strength = 1f;
 						if (maxHeight > 0f) strength = d.heightStrength.Evaluate(addedHeight/maxHeight);
 						if (d.noise == NOISE.Perlin) {
-							addedHeight += d.height * Noise.Perlin(d.detail*p.x,d.detail*p.y,d.detail*p.z) * strength;
+							addedHeight += d.height * Noise.Perlin(d.detail*p.x+d.seed,d.detail*p.y,d.detail*p.z) * strength;
 						} else {
-							addedHeight += d.height * Noise.Worley(d.detail*p.x,d.detail*p.y,d.detail*p.z) * strength;
+							addedHeight += d.height * Noise.Worley(d.detail*p.x+d.seed,d.detail*p.y,d.detail*p.z) * strength;
 						}
 						maxHeight += d.height;
 					}

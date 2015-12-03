@@ -8,12 +8,12 @@ public class TextureGenerator : MonoBehaviour {
 			Texture2D texture = new Texture2D(128, 128);
 			for (var i=0; i<128; i++) {
 				for (var j=0; j<128; j++) {
-					var v = Noise.Worley(i/8f, j/8f, q/8f);
+					var v = Noise.Perlin(i/8f, j/8f, q/8f);
 					texture.SetPixel(i,j,new Color(v,v,v,1));
 				}
 			}
 			byte[] bytes = texture.EncodeToPNG();
-			File.WriteAllBytes(Application.dataPath + "/../Worley"+q.ToString()+".png", bytes);
+			File.WriteAllBytes(Application.dataPath + "/../Perlin"+q.ToString()+".png", bytes);
 		}
 	}
 }

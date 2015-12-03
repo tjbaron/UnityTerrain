@@ -7,6 +7,7 @@ public enum NOISE {Perlin,Worley}
 [System.Serializable]
 public class DisplacementLayer {
 	public NOISE noise;
+	public float seed;
 	public float height;
 	public float detail;
 	public AnimationCurve heightStrength;
