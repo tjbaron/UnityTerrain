@@ -27,7 +27,7 @@ public class Segment : MonoBehaviour {
 				IEnumerator e = SubdivideSegment(d);
     			while (e.MoveNext());
 			}
-		} else if (dist < 15f || dist1 < 15f || dist2 < 15f || dist3 < 15f || dist4 < 15f) {
+		} else /*if (dist < 15f || dist1 < 15f || dist2 < 15f || dist3 < 15f || dist4 < 15f)*/ {
 			// Draw the segment if it doesn't need more subdividing
 			// and is facing the camera and is within our view distance.
 			if (Application.isPlaying) {
