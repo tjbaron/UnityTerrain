@@ -1,10 +1,11 @@
 fileFormatVersion: 2
 guid: 2bf0ea5dcc2c54f49945326553c8eab6
-timeCreated: 1449196851
+timeCreated: 1449220309
 licenseType: Free
 MonoImporter:
   serializedVersion: 2
   defaultReferences:
+  - waterSphere: {fileID: 400000, guid: 9b19c36965f844cbab1081abe08acbd3, type: 3}
   - mainMaterial: {fileID: 2100000, guid: 216be287f301244fa90f16e93610a5f7, type: 2}
   - waterMaterial: {fileID: 2100000, guid: 4532917d824d64fc1b07a9efb1e75ae5, type: 2}
   executionOrder: 0

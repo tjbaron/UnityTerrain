@@ -2,7 +2,7 @@
 using System.Collections;
 
 public class AnimateSeed : MonoBehaviour {
-	public Planet planet;
+	public PlanetTerrain planet;
 	private float lastChange = 0.0f;
 
 	// Use this for initialization

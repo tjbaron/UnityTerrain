@@ -16,7 +16,6 @@ public class DisplacementLayer {
 
 public class SegmentData {
 	public float radius;
-	public float waterHeight;
 	public Vector3 topLeft;
 	public Vector3 topRight;
 	public Vector3 bottomLeft;
@@ -25,10 +24,10 @@ public class SegmentData {
 	public Material mainMaterial;
 	public Material waterMaterial;
 	public int resolution;
+	public int maxSubdivisions;
 	public SegmentData subdivCopy(Vector3[] corners) {
 		var d = new SegmentData();
 		d.radius = radius;
-		d.waterHeight = waterHeight;
 		d.topLeft = corners[0];
 		d.topRight = corners[1];
 		d.bottomLeft = corners[2];
@@ -37,14 +36,16 @@ public class SegmentData {
 		d.mainMaterial = mainMaterial;
 		d.waterMaterial = waterMaterial;
 		d.resolution = resolution;
+		d.maxSubdivisions = maxSubdivisions-1;
 		return d;
 	}
 }
 
-[ExecuteInEditMode]
-public class Planet : MonoBehaviour {
+public class PlanetTerrain : MonoBehaviour {
+	public Transform waterSphere;
 	public bool updateTerrain = false;
 	public int segmentResolution = 8;
+	public int maxSubdivisions = 3;
 	public float radius = 1000f;
 	public float waterHeight = 0f;
 	public Material mainMaterial;// = new Material(Shader.Find("Terrain/HeightTexture"));
@@ -90,37 +91,44 @@ public class Planet : MonoBehaviour {
 		}
 	};
 
-	// Use this for initialization
-	void Update() {
-		if (updateTerrain) {
-			var children = new List<GameObject>();
-			foreach (Transform child in transform) children.Add(child.gameObject);
-			children.ForEach(child => DestroyImmediate(child));
-			if (Application.isPlaying) {
-				StartCoroutine(MakeSphere());
-			} else {
-				IEnumerator e = MakeSphere();
-    			while (e.MoveNext());
-			}
-			updateTerrain = false;
+	void Start() {
+		UpdateTerrain();
+	}
+
+	public void UpdateTerrain() {
+		var children = new List<GameObject>();
+		foreach (Transform child in transform) children.Add(child.gameObject);
+		children.ForEach(child => DestroyImmediate(child));
+		if (Application.isPlaying) {
+			StartCoroutine(MakeSphere());
+		} else {
+			IEnumerator e = MakeSphere();
+			while (e.MoveNext());
 		}
+		updateTerrain = false;
 	}
 
 	IEnumerator MakeSphere() {
+		if (waterSphere != null && waterHeight > 0f) {
+			var ws = Instantiate(waterSphere);
+			ws.localScale *= (radius+waterHeight)/1000f;
+			ws.parent = transform;
+			ws.gameObject.hideFlags = HideFlags.HideInHierarchy;
+			ws.GetComponent<Renderer>().material = waterMaterial;
+		}
 		for (var i=0; i<6; i++) {
 			var d = new SegmentData();
 			d.radius = radius;
-			d.waterHeight = waterHeight;
 			d.topLeft = cubeSides[i][0]; d.topRight = cubeSides[i][1];
 			d.bottomLeft = cubeSides[i][2]; d.bottomRight = cubeSides[i][3];
 			d.displace = displacementLayers;
 			d.mainMaterial = mainMaterial;
-			d.waterMaterial = waterMaterial;
 			d.resolution = segmentResolution;
+			d.maxSubdivisions = maxSubdivisions;
 
 			var go = new GameObject();
 			go.GetComponent<Transform>().parent = transform;
-			var seg = go.AddComponent<Segment>();
+			var seg = go.AddComponent<PlanetTerrainSegment>();
 			if (Application.isPlaying) {
 				yield return StartCoroutine(seg.Generate(d));
 			} else {
