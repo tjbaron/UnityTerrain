@@ -80,32 +80,39 @@ public class Segment : MonoBehaviour {
 	}
 
 	public IEnumerator MakeSegment(SegmentData d, bool isWater=false) {
-		var mf = gameObject.AddComponent<MeshFilter>();
-		var mr = gameObject.AddComponent<MeshRenderer>();
-		var mc = gameObject.AddComponent<MeshCollider>();
+		var tl = d.topLeft.normalized * d.radius;
+		var br = d.bottomRight.normalized * d.radius;
+		var segmentNormal = (tl+br).normalized;
+		var cameraDir = Camera.main.transform.forward;
 
-		if (Application.isPlaying) {
-			yield return StartCoroutine(SegmentGenerator.Generate(d.resolution,
-				isWater?d.radius+d.waterHeight:d.radius, 
-				d.topLeft, 
-				d.topRight,
-				d.bottomLeft,
-				d.bottomRight,
-				isWater?null:d.displace,
-				mf, mc));
-		} else {
-			IEnumerator e = SegmentGenerator.Generate(d.resolution,
-				isWater?d.radius+d.waterHeight:d.radius, 
-				d.topLeft, 
-				d.topRight,
-				d.bottomLeft,
-				d.bottomRight,
-				isWater?null:d.displace,
-				mf, mc);
-			while (e.MoveNext());
+		if (Vector3.Angle(segmentNormal, cameraDir) > 90f) {
+			var mf = gameObject.AddComponent<MeshFilter>();
+			var mr = gameObject.AddComponent<MeshRenderer>();
+			var mc = gameObject.AddComponent<MeshCollider>();
+
+			if (Application.isPlaying) {
+				yield return StartCoroutine(SegmentGenerator.Generate(d.resolution,
+					isWater?d.radius+d.waterHeight:d.radius, 
+					d.topLeft, 
+					d.topRight,
+					d.bottomLeft,
+					d.bottomRight,
+					isWater?null:d.displace,
+					mf, mc));
+			} else {
+				IEnumerator e = SegmentGenerator.Generate(d.resolution,
+					isWater?d.radius+d.waterHeight:d.radius, 
+					d.topLeft, 
+					d.topRight,
+					d.bottomLeft,
+					d.bottomRight,
+					isWater?null:d.displace,
+					mf, mc);
+				while (e.MoveNext());
+			}
+
+			if (isWater) mr.sharedMaterial = d.waterMaterial;
+			else mr.sharedMaterial = d.mainMaterial;
 		}
-
-		if (isWater) mr.sharedMaterial = d.waterMaterial;
-		else mr.sharedMaterial = d.mainMaterial;
 	}
 }
