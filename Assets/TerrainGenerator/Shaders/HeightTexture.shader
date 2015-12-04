@@ -2,13 +2,13 @@
 	Properties {
 		_Color ("Color", Color) = (1, 1, 1, 0)
 		_EquatorColor ("Equator Color", Color) = (1, 1, 1, 0)
-		_EquatorWidth ("Equator Width", Float) = 10.0
+		_EquatorWidth ("Equator Width", Float) = 500.0
 		_MainTex ("Base (RGB)", 2D) = "white" {}
-		_ChangePoint ("Change at this distance", Float) = 3
+		_ChangePoint ("Change at this distance", Float) = 1050.0
 		_OuterTex ("Base (RGB)", 2D) = "black" {}
 		_PoleTex ("Base (RGB)", 2D) = "black" {}
 		_CentrePoint ("Centre", Vector) = (0, 0, 0, 0)
-		_BlendThreshold ("Blend Distance", Float) = 0.5
+		_BlendThreshold ("Blend Distance", Float) = 3.0
 	}
 	SubShader {
 		Tags { "RenderType"="Opaque" }

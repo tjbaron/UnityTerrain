@@ -44,11 +44,11 @@ public class SegmentData {
 [ExecuteInEditMode]
 public class Planet : MonoBehaviour {
 	public bool updateTerrain = false;
-	public int segmentResolution = 32;
-	public float radius = 32f;
-	public float waterHeight = 2f;
-	public Material mainMaterial;
-	public Material waterMaterial;
+	public int segmentResolution = 8;
+	public float radius = 1000f;
+	public float waterHeight = 0f;
+	public Material mainMaterial;// = new Material(Shader.Find("Terrain/HeightTexture"));
+	public Material waterMaterial;// = new Material(Shader.Find("Terrain/HeightTexture"));
 	public DisplacementLayer[] displacementLayers;
 
 	private Vector3[][] cubeSides = new Vector3[][]{
