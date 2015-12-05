@@ -34,8 +34,8 @@ public static class SegmentGenerator {
 					newTriangles[i+4] = v-segmentResolution-2;
 					newTriangles[i+5] = v-segmentResolution-1;
 				}
+				//if (y%1024==0) yield return null;
 			}
-			if (y%16==0) yield return null;
 		}
 
 		Mesh mesh = new Mesh();
@@ -44,9 +44,6 @@ public static class SegmentGenerator {
 		mesh.uv = newUV;
 		mesh.RecalculateNormals();
 
-		/*for (int i=0; i<newNormals.Length; i++) {
-			newNormals[i] = Vector3.up;
-		}*/
 		newNormals = mesh.normals;
 		for (var x=0; x<segmentResolution+1; x++) {
 			newNormals[x] = FindNormal(segmentResolution, radius, x, 0, xa, xb, ya, yb, displace);
@@ -61,6 +58,7 @@ public static class SegmentGenerator {
 		}
 		mesh.normals = newNormals;
 
+		yield return null;
 		mf.sharedMesh = mesh;
 		mc.sharedMesh = mf.sharedMesh;
 	}

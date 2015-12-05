@@ -3,15 +3,16 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class PlanetTerrainSegment : MonoBehaviour {
-	private bool busy = true;
-	private bool subdivided = false;
-	private bool first = true;
-	private SegmentData save;
+	public bool subdivided = false;
+	public bool first = true;
+	public SegmentData d;
+	public MeshRenderer mr = null;
 
-	public IEnumerator Generate(SegmentData d) {
+	public PlanetTerrainSegment[] segments = new PlanetTerrainSegment[4];
+
+	public IEnumerator Generate(SegmentData newdata=null) {
 		if (first) gameObject.hideFlags = HideFlags.HideInHierarchy;
-		busy = true;
-		save = d;
+		if (newdata != null) d = newdata;
 		var tl = d.topLeft.normalized * d.radius;
 		var tr = d.topRight.normalized * d.radius;
 		var bl = d.bottomLeft.normalized * d.radius;
@@ -28,7 +29,13 @@ public class PlanetTerrainSegment : MonoBehaviour {
 		
 		var size = Vector3.Distance(tl, br);
 
-		if (!first && d.maxSubdivisions > 0 && (dist < size || dist1 < size || dist2 < size || dist3 < size || dist4 < size)) {
+		if (
+			(!Application.isPlaying && d.editorSubdivisions > 0) || 
+			(
+				!first && (d.maxSubdivisions > 0) && 
+				(dist < size || dist1 < size || dist2 < size || dist3 < size || dist4 < size)
+			)
+		) {
 			if (!subdivided) {
 				// Subdivide the segment if it's close to the camera.
 				if (Application.isPlaying) {
@@ -37,8 +44,12 @@ public class PlanetTerrainSegment : MonoBehaviour {
 					IEnumerator e = SubdivideSegment(d);
 	    			while (e.MoveNext());
 				}
+			} else {
+				for (var i=0; i<segments.Length; i++) {
+					yield return StartCoroutine(segments[i].Generate());
+				}
 			}
-		} else /*if (dist < 15f || dist1 < 15f || dist2 < 15f || dist3 < 15f || dist4 < 15f)*/ {
+		} else {
 			// Draw the segment if it doesn't need more subdividing
 			// and is facing the camera and is within our view distance.
 			if (first || subdivided == true) {
@@ -50,8 +61,30 @@ public class PlanetTerrainSegment : MonoBehaviour {
 				}
 			}
 		}
+
+		// Decide if this segment should be visible at all.
+		if (mr != null) {
+			var cameraDir = Camera.main.transform.position.normalized;			
+			var horizonAngle = Mathf.Acos(d.radius/Camera.main.transform.position.magnitude) * Mathf.Rad2Deg;
+			
+			var a1 = Vector3.Angle((tl+br).normalized, cameraDir);
+			var a2 = Vector3.Angle(tl.normalized, cameraDir);
+			a1 = a1<a2 ? a1 : a2;
+			a2 = Vector3.Angle(tr.normalized, cameraDir);
+			a1 = a1<a2 ? a1 : a2;
+			a2 = Vector3.Angle(bl.normalized, cameraDir);
+			a1 = a1<a2 ? a1 : a2;
+			a2 = Vector3.Angle(br.normalized, cameraDir);
+			a1 = a1<a2 ? a1 : a2;
+
+			if (!Application.isPlaying || a1 < horizonAngle+1f) {
+				mr.enabled = true;
+			} else {
+				mr.enabled = false;
+			}
+		}
+
 		first = false;
-		busy = false;
 	}
 
 	IEnumerator SubdivideSegment(SegmentData d) {
@@ -78,6 +111,7 @@ public class PlanetTerrainSegment : MonoBehaviour {
 			var go = new GameObject();
 			go.GetComponent<Transform>().parent = transform;
 			var seg = go.AddComponent<PlanetTerrainSegment>();
+			segments[i] = seg;
 			if (Application.isPlaying) {
 				yield return StartCoroutine(seg.Generate(d2));
 			} else {
@@ -86,61 +120,44 @@ public class PlanetTerrainSegment : MonoBehaviour {
 			}
 		}
 
-		children.ForEach(child => Destroy(child));
-		Destroy(gameObject.GetComponent<MeshCollider>());
-		Destroy(gameObject.GetComponent<MeshRenderer>());
-		Destroy(gameObject.GetComponent<MeshFilter>());
+		children.ForEach(child => DestroyImmediate(child));
+		DestroyImmediate(gameObject.GetComponent<MeshCollider>());
+		DestroyImmediate(gameObject.GetComponent<MeshRenderer>());
+		DestroyImmediate(gameObject.GetComponent<MeshFilter>());
 	}
 
 	public IEnumerator MakeSegment(SegmentData d) {
 		var children = new List<GameObject>();
 		foreach (Transform child in transform) children.Add(child.gameObject);
-
 		subdivided = false;
-		var tl = d.topLeft.normalized * d.radius;
-		var br = d.bottomRight.normalized * d.radius;
-		var segmentNormal = (tl+br).normalized;
-		var cameraDir = Camera.main.transform.forward;
 
-		if (Vector3.Angle(segmentNormal, cameraDir) > 45f) {
-			var mf = gameObject.AddComponent<MeshFilter>();
-			var mr = gameObject.AddComponent<MeshRenderer>();
-			var mc = gameObject.AddComponent<MeshCollider>();
+		var mf = gameObject.AddComponent<MeshFilter>();
+		mr = gameObject.AddComponent<MeshRenderer>();
+		mr.receiveShadows = false;
+		var mc = gameObject.AddComponent<MeshCollider>();
 
-			if (Application.isPlaying) {
-				yield return StartCoroutine(SegmentGenerator.Generate(d.resolution,
-					d.radius, 
-					d.topLeft, 
-					d.topRight,
-					d.bottomLeft,
-					d.bottomRight,
-					d.displace,
-					mf, mc));
-			} else {
-				IEnumerator e = SegmentGenerator.Generate(d.resolution,
-					d.radius, 
-					d.topLeft, 
-					d.topRight,
-					d.bottomLeft,
-					d.bottomRight,
-					d.displace,
-					mf, mc);
-				while (e.MoveNext());
-			}
-			mr.sharedMaterial = d.mainMaterial;
+		if (Application.isPlaying) {
+			yield return StartCoroutine(SegmentGenerator.Generate(d.resolution,
+				d.radius, 
+				d.topLeft, 
+				d.topRight,
+				d.bottomLeft,
+				d.bottomRight,
+				d.displace,
+				mf, mc));
+		} else {
+			IEnumerator e = SegmentGenerator.Generate(d.resolution,
+				d.radius, 
+				d.topLeft, 
+				d.topRight,
+				d.bottomLeft,
+				d.bottomRight,
+				d.displace,
+				mf, mc);
+			while (e.MoveNext());
 		}
+		mr.sharedMaterial = d.mainMaterial;
 
-		children.ForEach(child => Destroy(child));
-	}
-
-	void Update() {
-		if (!busy) {
-			if (Application.isPlaying) {
-				StartCoroutine(Generate(save));
-			} else {
-				IEnumerator e = Generate(save);
-    			while (e.MoveNext());
-			}
-		}
+		children.ForEach(child => DestroyImmediate(child));
 	}
 }

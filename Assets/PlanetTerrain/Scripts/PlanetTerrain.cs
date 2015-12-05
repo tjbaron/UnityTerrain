@@ -14,6 +14,7 @@ public class DisplacementLayer {
 	public AnimationCurve equatorStrength;
 }
 
+[System.Serializable]
 public class SegmentData {
 	public float radius;
 	public Vector3 topLeft;
@@ -25,6 +26,8 @@ public class SegmentData {
 	public Material waterMaterial;
 	public int resolution;
 	public int maxSubdivisions;
+	public int editorSubdivisions;
+	public float degreesPerQuad = 6f;
 	public SegmentData subdivCopy(Vector3[] corners) {
 		var d = new SegmentData();
 		d.radius = radius;
@@ -37,20 +40,27 @@ public class SegmentData {
 		d.waterMaterial = waterMaterial;
 		d.resolution = resolution;
 		d.maxSubdivisions = maxSubdivisions-1;
+		//Debug.Log(d.maxSubdivisions);
+		d.editorSubdivisions = editorSubdivisions-1;
+		d.degreesPerQuad = degreesPerQuad;
 		return d;
 	}
 }
 
 public class PlanetTerrain : MonoBehaviour {
 	public Transform waterSphere;
-	public bool updateTerrain = false;
 	public int segmentResolution = 8;
 	public int maxSubdivisions = 3;
+	public int editorSubdivisions = 1;
+	public float degreesPerQuad = 6f;
 	public float radius = 1000f;
 	public float waterHeight = 0f;
 	public Material mainMaterial;// = new Material(Shader.Find("Terrain/HeightTexture"));
 	public Material waterMaterial;// = new Material(Shader.Find("Terrain/HeightTexture"));
 	public DisplacementLayer[] displacementLayers;
+
+	private bool busy = false;
+	public PlanetTerrainSegment[] segments = new PlanetTerrainSegment[6];
 
 	private Vector3[][] cubeSides = new Vector3[][]{
 		new Vector3[]{
@@ -91,10 +101,6 @@ public class PlanetTerrain : MonoBehaviour {
 		}
 	};
 
-	void Start() {
-		UpdateTerrain();
-	}
-
 	public void UpdateTerrain() {
 		var children = new List<GameObject>();
 		foreach (Transform child in transform) children.Add(child.gameObject);
@@ -105,7 +111,6 @@ public class PlanetTerrain : MonoBehaviour {
 			IEnumerator e = MakeSphere();
 			while (e.MoveNext());
 		}
-		updateTerrain = false;
 	}
 
 	IEnumerator MakeSphere() {
@@ -125,10 +130,12 @@ public class PlanetTerrain : MonoBehaviour {
 			d.mainMaterial = mainMaterial;
 			d.resolution = segmentResolution;
 			d.maxSubdivisions = maxSubdivisions;
+			d.editorSubdivisions = editorSubdivisions;
 
 			var go = new GameObject();
 			go.GetComponent<Transform>().parent = transform;
 			var seg = go.AddComponent<PlanetTerrainSegment>();
+			segments[i] = seg;
 			if (Application.isPlaying) {
 				yield return StartCoroutine(seg.Generate(d));
 			} else {
@@ -136,5 +143,19 @@ public class PlanetTerrain : MonoBehaviour {
     			while (e.MoveNext());
 			}
 		}
+	}
+
+	void Update() {
+		if (!busy) {
+			StartCoroutine(RefreshTerrain());
+		}
+	}
+
+	private IEnumerator RefreshTerrain() {
+		busy = true;
+		for (var i=0; i<segments.Length; i++) {
+			yield return StartCoroutine(segments[i].Generate());
+		}
+		busy = false;
 	}
 }

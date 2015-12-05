@@ -6,6 +6,6 @@ public class MenuTest : MonoBehaviour {
 		var go = new GameObject();
 		go.name = "Planet Terrain";
 		var p = go.AddComponent<PlanetTerrain>();
-		p.updateTerrain = true;
+		p.UpdateTerrain();
 	}
 }
