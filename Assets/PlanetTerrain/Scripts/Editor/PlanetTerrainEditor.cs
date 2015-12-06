@@ -7,6 +7,7 @@ using System.Collections.Generic;
 [CustomEditor(typeof(PlanetTerrain))]
 public class PlanetTerrainEditor : Editor {
 	SerializedProperty segmentResolution;
+	SerializedProperty minSubdivisions;
 	SerializedProperty maxSubdivisions;
 	SerializedProperty editorSubdivisions;
 	SerializedProperty radius;
@@ -22,6 +23,7 @@ public class PlanetTerrainEditor : Editor {
 	
 	void OnEnable () {
 		segmentResolution = serializedObject.FindProperty("segmentResolution");
+		minSubdivisions = serializedObject.FindProperty("minSubdivisions");
 		maxSubdivisions = serializedObject.FindProperty("maxSubdivisions");
 		editorSubdivisions = serializedObject.FindProperty("editorSubdivisions");
 		radius = serializedObject.FindProperty("radius");
@@ -39,6 +41,7 @@ public class PlanetTerrainEditor : Editor {
 		serializedObject.Update();
 
 		EditorGUILayout.IntSlider(segmentResolution, 2, 64);
+		EditorGUILayout.IntSlider(minSubdivisions, 0, maxSubdivisions.intValue);
 		EditorGUILayout.IntSlider(maxSubdivisions, 0, 8);
 		EditorGUILayout.IntSlider(editorSubdivisions, 0, maxSubdivisions.intValue);
 		EditorGUILayout.Slider(radius, 1f, 20000f, new GUIContent("Planet Radius"));

@@ -62,7 +62,7 @@ public class PlanetTerrainSegment : MonoBehaviour {
 
 	private IEnumerator SubdivideDecider() {
 		// Decide if the mesh should be subdivided
-		if (!Application.isPlaying || (Application.isPlaying && d.maxSubdivisions > 0 && PTHelpers.GetDistance(d) < PTHelpers.GetSize(d))) {
+		if (!Application.isPlaying || d.minSubdivisions>0 || (Application.isPlaying && d.maxSubdivisions > 0 && PTHelpers.GetDistance(d) < PTHelpers.GetSize(d))) {
 			if (!subdivided) {
 				if (Application.isPlaying) {
 					yield return StartCoroutine(SubdivideSegment(d));
@@ -121,31 +121,35 @@ public class PlanetTerrainSegment : MonoBehaviour {
 			segments[i].Enable();
 		}
 
-		if (mr.enabled) {
-			mr.enabled = false;
-			PTHelpers.segmentCount--;
+		if (d.minSubdivisions <= 0) {
+			if (mr.enabled) {
+				mr.enabled = false;
+				PTHelpers.segmentCount--;
+			}
+			mc.enabled = false;
 		}
-		mc.enabled = false;
 	}
 
 	private IEnumerator MakeSegment(SegmentData d) {
-		var mf = gameObject.AddComponent<MeshFilter>();
-		mr = gameObject.AddComponent<MeshRenderer>();
-		mc = gameObject.AddComponent<MeshCollider>();
+		if (d.minSubdivisions <= 0) {
+			var mf = gameObject.AddComponent<MeshFilter>();
+			mr = gameObject.AddComponent<MeshRenderer>();
+			mc = gameObject.AddComponent<MeshCollider>();
 
-		if (Application.isPlaying || d.editorSubdivisions != 0) {
-			mr.enabled = false;
-			mr.enabled = false;
-		}
-		mr.receiveShadows = false;
+			if (Application.isPlaying || d.editorSubdivisions != 0) {
+				mr.enabled = false;
+				mr.enabled = false;
+			}
+			mr.receiveShadows = false;
 
-		if (Application.isPlaying) {
-			yield return StartCoroutine(SegmentGenerator.Generate(d, mf, mc));
-		} else {
-			IEnumerator e = SegmentGenerator.Generate(d, mf, mc);
-			while (e.MoveNext());
+			if (Application.isPlaying) {
+				yield return StartCoroutine(SegmentGenerator.Generate(d, mf, mc));
+			} else {
+				IEnumerator e = SegmentGenerator.Generate(d, mf, mc);
+				while (e.MoveNext());
+			}
+			mr.sharedMaterial = d.mainMaterial;
 		}
-		mr.sharedMaterial = d.mainMaterial;
 	}
 
 	private void UpdateVisibility() {

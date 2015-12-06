@@ -81,32 +81,32 @@ public static class SegmentGenerator {
 						var a = p/p.x;
 						var x = (a.z+1f)/2f;
 						var y = (a.y+1f)/2f;
-						addedHeight += d.height * d.texture.GetPixelBilinear(Mathf.Lerp(0.5f,0.75f,x), Mathf.Lerp(0.333f,0.666f,y)).grayscale;
+						addedHeight += d.height * d.texture.GetPixelBilinear(Mathf.Lerp(0.501f,0.744f,x), Mathf.Lerp(0.334f,0.665f,y)).grayscale;
 					} else if (mag.x >= mag.y && mag.x >= mag.z) { // Left
 						var a = p/p.x;
 						var x = (a.z+1f)/2f;
 						var y = 1f-((a.y+1f)/2f);
-						addedHeight += d.height * d.texture.GetPixelBilinear(Mathf.Lerp(0f,0.25f,x), Mathf.Lerp(0.333f,0.666f,y)).grayscale;
+						addedHeight += d.height * d.texture.GetPixelBilinear(Mathf.Lerp(0.001f,0.249f,x), Mathf.Lerp(0.334f,0.665f,y)).grayscale;
 					} else if (p.y >= mag.x && p.y >= mag.z) { // Top
 						var a = p/p.y;
 						var x = (a.x+1f)/2f;
 						var y = (a.z+1f)/2f;
-						addedHeight += d.height * d.texture.GetPixelBilinear(Mathf.Lerp(0.25f,0.5f,x), Mathf.Lerp(0.666f,1f,y)).grayscale;
+						addedHeight += d.height * d.texture.GetPixelBilinear(Mathf.Lerp(0.251f,0.499f,x), Mathf.Lerp(0.666f,0.999f,y)).grayscale;
 					} else if (mag.y >= mag.x && mag.y >= mag.z) { // Bottom
 						var a = p/p.y;
 						var x = 1f-((a.x+1f)/2f);
 						var y = (a.z+1f)/2f;
-						addedHeight += d.height * d.texture.GetPixelBilinear(Mathf.Lerp(0.25f,0.5f,x), Mathf.Lerp(0f,0.333f,y)).grayscale;
+						addedHeight += d.height * d.texture.GetPixelBilinear(Mathf.Lerp(0.251f,0.499f,x), Mathf.Lerp(0.001f,0.333f,y)).grayscale;
 					} else if (p.z >= mag.x && p.z >= mag.y) { // Back
 						var a = p/p.z;
 						var x = 1-((a.x+1f)/2f);
 						var y = (a.y+1f)/2f;
-						addedHeight += d.height * d.texture.GetPixelBilinear(Mathf.Lerp(0.75f,1f,x), Mathf.Lerp(0.333f,0.666f,y)).grayscale;
+						addedHeight += d.height * d.texture.GetPixelBilinear(Mathf.Lerp(0.751f,0.999f,x), Mathf.Lerp(0.334f,0.665f,y)).grayscale;
 					} else if (mag.z >= mag.x && mag.z >= mag.y) { // Front
 						var a = -p/p.z;
 						var x = (a.x+1f)/2f;
 						var y = (a.y+1f)/2f;
-						addedHeight += d.height * d.texture.GetPixelBilinear(Mathf.Lerp(0.25f,0.5f,x), Mathf.Lerp(0.333f,0.666f,y)).grayscale;
+						addedHeight += d.height * d.texture.GetPixelBilinear(Mathf.Lerp(0.251f,0.499f,x), Mathf.Lerp(0.334f,0.665f,y)).grayscale;
 					}
 				}
 				maxHeight += d.height;

@@ -4,6 +4,45 @@ using System.Collections;
 public static class PTHelpers {
 	public static int segmentCount = 6;
 
+	public static Vector3[][] cubeSides = new Vector3[][]{
+		new Vector3[]{
+			new Vector3(-1f,-1f, 1f),
+			new Vector3( 1f,-1f, 1f),
+			new Vector3(-1f, 1f, 1f),
+			new Vector3( 1f, 1f, 1f)
+		},
+		new Vector3[]{
+			new Vector3(-1f, 1f, 1f), 
+			new Vector3( 1f, 1f, 1f),
+			new Vector3(-1f, 1f,-1f),
+			new Vector3( 1f, 1f,-1f)
+		},
+		new Vector3[]{
+			new Vector3(-1f,-1f,-1f), 
+			new Vector3( 1f,-1f,-1f),
+			new Vector3(-1f,-1f, 1f),
+			new Vector3( 1f,-1f, 1f)
+		},
+		new Vector3[]{
+			new Vector3( 1f,-1f,-1f), 
+			new Vector3( 1f, 1f,-1f),
+			new Vector3( 1f,-1f, 1f),
+			new Vector3( 1f, 1f, 1f)
+		},
+		new Vector3[]{
+			new Vector3(-1f,-1f, 1f), 
+			new Vector3(-1f, 1f, 1f),
+			new Vector3(-1f,-1f,-1f),
+			new Vector3(-1f, 1f,-1f)
+		},
+		new Vector3[]{
+			new Vector3( 1f,-1f,-1f), 
+			new Vector3(-1f,-1f,-1f),
+			new Vector3( 1f, 1f,-1f),
+			new Vector3(-1f, 1f,-1f)
+		}
+	};
+
 	public static float GetDistance(SegmentData d) {
 		var tl = d.topLeft.normalized * d.radius;
 		var tr = d.topRight.normalized * d.radius;
