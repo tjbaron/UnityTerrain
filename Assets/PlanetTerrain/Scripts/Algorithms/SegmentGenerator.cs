@@ -63,7 +63,7 @@ public static class SegmentGenerator {
 		mc.sharedMesh = mf.sharedMesh;
 	}
 
-	private static float GetHeight(Vector3 p, float radius, DisplacementLayer[] displace) {
+	public static float GetHeight(Vector3 p, float radius, DisplacementLayer[] displace) {
 		if (displace != null) {
 			float maxHeight = 0f;
 			float addedHeight = 0f;

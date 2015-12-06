@@ -113,7 +113,7 @@ public class PlanetTerrain : MonoBehaviour {
 		}
 	}
 
-	IEnumerator MakeSphere() {
+	private IEnumerator MakeSphere() {
 		if (waterSphere != null && waterHeight > 0f) {
 			var ws = Instantiate(waterSphere);
 			ws.localScale *= (radius+waterHeight)/1000f;
@@ -157,5 +157,9 @@ public class PlanetTerrain : MonoBehaviour {
 			yield return StartCoroutine(segments[i].Generate());
 		}
 		busy = false;
+	}
+
+	public float GetHeight(Vector3 v) {
+		return SegmentGenerator.GetHeight(v, radius, displacementLayers);
 	}
 }

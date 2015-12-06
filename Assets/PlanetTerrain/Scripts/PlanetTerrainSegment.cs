@@ -18,22 +18,23 @@ public class PlanetTerrainSegment : MonoBehaviour {
 		var bl = d.bottomLeft.normalized * d.radius;
 		var br = d.bottomRight.normalized * d.radius;
 
-		var segmentCenter = (tl+br)/2f;
 		var cameraPos = Camera.main.transform.position;
-		
-		var dist = Vector3.Distance(segmentCenter, cameraPos);
-		var dist1 = Vector3.Distance(tl, cameraPos);
-		var dist2 = Vector3.Distance(tr, cameraPos);
-		var dist3 = Vector3.Distance(bl, cameraPos);
-		var dist4 = Vector3.Distance(br, cameraPos);
-		
-		var size = Vector3.Distance(tl, br);
+		var dist = Mathf.Min(
+			Vector3.Distance((tl+br)/2f, cameraPos),
+			Vector3.Distance(tl, cameraPos),
+			Vector3.Distance(tr, cameraPos),
+			Vector3.Distance(bl, cameraPos),
+			Vector3.Distance(br, cameraPos)
+		);
 
+		//Debug.Log(dist);
+		//Debug.Log(Mathf.Tan(d.degreesPerQuad*Mathf.Deg2Rad)*dist);
 		if (
 			(!Application.isPlaying && d.editorSubdivisions > 0) || 
 			(
 				!first && (d.maxSubdivisions > 0) && 
-				(dist < size || dist1 < size || dist2 < size || dist3 < size || dist4 < size)
+				//Mathf.Tan(d.degreesPerQuad*Mathf.Deg2Rad)*dist < (tr-tl).magnitude/d.resolution
+				dist < Vector3.Distance(tl, br)
 			)
 		) {
 			if (!subdivided) {
@@ -66,20 +67,20 @@ public class PlanetTerrainSegment : MonoBehaviour {
 		if (mr != null) {
 			var cameraDir = Camera.main.transform.position.normalized;			
 			var horizonAngle = Mathf.Acos(d.radius/Camera.main.transform.position.magnitude) * Mathf.Rad2Deg;
-			
-			var a1 = Vector3.Angle((tl+br).normalized, cameraDir);
-			var a2 = Vector3.Angle(tl.normalized, cameraDir);
-			a1 = a1<a2 ? a1 : a2;
-			a2 = Vector3.Angle(tr.normalized, cameraDir);
-			a1 = a1<a2 ? a1 : a2;
-			a2 = Vector3.Angle(bl.normalized, cameraDir);
-			a1 = a1<a2 ? a1 : a2;
-			a2 = Vector3.Angle(br.normalized, cameraDir);
-			a1 = a1<a2 ? a1 : a2;
+
+			var a1 = Mathf.Min(
+				Vector3.Angle((tl+br).normalized, cameraDir),
+				Vector3.Angle(tl.normalized, cameraDir),
+				Vector3.Angle(tr.normalized, cameraDir),
+				Vector3.Angle(bl.normalized, cameraDir),
+				Vector3.Angle(br.normalized, cameraDir)
+			);
 
 			if (!Application.isPlaying || a1 < horizonAngle+1f) {
+				if (mr.enabled == false) PTHelpers.Add();
 				mr.enabled = true;
 			} else {
+				if (mr.enabled == true) PTHelpers.Remove();
 				mr.enabled = false;
 			}
 		}
@@ -157,7 +158,11 @@ public class PlanetTerrainSegment : MonoBehaviour {
 			while (e.MoveNext());
 		}
 		mr.sharedMaterial = d.mainMaterial;
+		PTHelpers.Add();
 
-		children.ForEach(child => DestroyImmediate(child));
+		children.ForEach(child => {
+			if (child.GetComponent<MeshRenderer>().enabled) PTHelpers.Remove();
+			DestroyImmediate(child);
+		});
 	}
 }
