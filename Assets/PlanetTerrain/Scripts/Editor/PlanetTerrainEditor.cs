@@ -60,6 +60,8 @@ public class PlanetTerrainEditor : Editor {
 				EditorGUILayout.Slider(e.FindPropertyRelative("seed"), 0f, 65536f);
 				EditorGUILayout.Slider(e.FindPropertyRelative("height"), 0f, radius.floatValue);
 				EditorGUILayout.Slider(e.FindPropertyRelative("detail"), 0f, radius.floatValue, new GUIContent("Noise Frequency"));
+				EditorGUILayout.PropertyField(e.FindPropertyRelative("heightStrength"));
+				EditorGUILayout.PropertyField(e.FindPropertyRelative("texture"));
 			}
 		}
 

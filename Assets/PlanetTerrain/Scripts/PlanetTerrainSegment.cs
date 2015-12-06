@@ -2,43 +2,68 @@
 using System.Collections;
 using System.Collections.Generic;
 
+// Mathf.Tan(d.degreesPerQuad*Mathf.Deg2Rad)*dist < (tr-tl).magnitude/d.resolution
+
 public class PlanetTerrainSegment : MonoBehaviour {
+	public bool isEnabled = false;
 	public bool subdivided = false;
-	public bool first = true;
+	public bool generated = false;
 	public SegmentData d;
 	public MeshRenderer mr = null;
-
+	public MeshCollider mc = null;
 	public PlanetTerrainSegment[] segments = new PlanetTerrainSegment[4];
 
+	public void Enable() {
+		isEnabled = true;
+		if (Application.isPlaying) {
+			mc.enabled = true;
+			UpdateVisibility();
+		}
+	}
+	public void Disable() {
+		if (mr.enabled) PTHelpers.segmentCount--;
+		if (subdivided) {
+			for (var i=0; i<segments.Length; i++) {
+				segments[i].Disable();
+			}
+		}
+		Destroy(gameObject);
+	}
+
 	public IEnumerator Generate(SegmentData newdata=null) {
-		if (first) gameObject.hideFlags = HideFlags.HideInHierarchy;
 		if (newdata != null) d = newdata;
-		var tl = d.topLeft.normalized * d.radius;
-		var tr = d.topRight.normalized * d.radius;
-		var bl = d.bottomLeft.normalized * d.radius;
-		var br = d.bottomRight.normalized * d.radius;
 
-		var cameraPos = Camera.main.transform.position;
-		var dist = Mathf.Min(
-			Vector3.Distance((tl+br)/2f, cameraPos),
-			Vector3.Distance(tl, cameraPos),
-			Vector3.Distance(tr, cameraPos),
-			Vector3.Distance(bl, cameraPos),
-			Vector3.Distance(br, cameraPos)
-		);
+		if (!generated) {
+			// Generate this segment.
+			gameObject.hideFlags = HideFlags.HideInHierarchy;
+			if (Application.isPlaying) {
+				yield return StartCoroutine(MakeSegment(d));
+			} else {
+				IEnumerator e = MakeSegment(d);
+    			while (e.MoveNext());
+			}
+			generated = true;
+		} else {
+			yield return StartCoroutine(SubdivideDecider());
+		}
 
-		//Debug.Log(dist);
-		//Debug.Log(Mathf.Tan(d.degreesPerQuad*Mathf.Deg2Rad)*dist);
-		if (
-			(!Application.isPlaying && d.editorSubdivisions > 0) || 
-			(
-				!first && (d.maxSubdivisions > 0) && 
-				//Mathf.Tan(d.degreesPerQuad*Mathf.Deg2Rad)*dist < (tr-tl).magnitude/d.resolution
-				dist < Vector3.Distance(tl, br)
-			)
-		) {
+		if (!Application.isPlaying && d.editorSubdivisions > 0) {
+			IEnumerator e = SubdivideDecider();
+	    	while (e.MoveNext());
+		}
+	}
+
+	void Update() {
+		// Decide if this segment should be visible at all.
+		if (generated && isEnabled && !subdivided) {
+			UpdateVisibility();	
+		}
+	}
+
+	private IEnumerator SubdivideDecider() {
+		// Decide if the mesh should be subdivided
+		if (!Application.isPlaying || (Application.isPlaying && d.maxSubdivisions > 0 && PTHelpers.GetDistance(d) < PTHelpers.GetSize(d))) {
 			if (!subdivided) {
-				// Subdivide the segment if it's close to the camera.
 				if (Application.isPlaying) {
 					yield return StartCoroutine(SubdivideSegment(d));
 				} else {
@@ -51,47 +76,18 @@ public class PlanetTerrainSegment : MonoBehaviour {
 				}
 			}
 		} else {
-			// Draw the segment if it doesn't need more subdividing
-			// and is facing the camera and is within our view distance.
-			if (first || subdivided == true) {
-				if (Application.isPlaying) {
-					yield return StartCoroutine(MakeSegment(d));
-				} else {
-					IEnumerator e = MakeSegment(d);
-	    			while (e.MoveNext());
+			if (subdivided) {
+				for (var i=0; i<segments.Length; i++) {
+					segments[i].Disable();
 				}
+				subdivided = false;
+				mc.enabled = true;
+				UpdateVisibility();
 			}
 		}
-
-		// Decide if this segment should be visible at all.
-		if (mr != null) {
-			var cameraDir = Camera.main.transform.position.normalized;			
-			var horizonAngle = Mathf.Acos(d.radius/Camera.main.transform.position.magnitude) * Mathf.Rad2Deg;
-
-			var a1 = Mathf.Min(
-				Vector3.Angle((tl+br).normalized, cameraDir),
-				Vector3.Angle(tl.normalized, cameraDir),
-				Vector3.Angle(tr.normalized, cameraDir),
-				Vector3.Angle(bl.normalized, cameraDir),
-				Vector3.Angle(br.normalized, cameraDir)
-			);
-
-			if (!Application.isPlaying || a1 < horizonAngle+1f) {
-				if (mr.enabled == false) PTHelpers.Add();
-				mr.enabled = true;
-			} else {
-				if (mr.enabled == true) PTHelpers.Remove();
-				mr.enabled = false;
-			}
-		}
-
-		first = false;
 	}
 
-	IEnumerator SubdivideSegment(SegmentData d) {
-		var children = new List<GameObject>();
-		foreach (Transform child in transform) children.Add(child.gameObject);
-
+	private IEnumerator SubdivideSegment(SegmentData d) {
 		subdivided = true;
 		// Find the 5 points that split this quad into 4 more.
 		var top = (d.topLeft+d.topRight)/2f;
@@ -121,48 +117,49 @@ public class PlanetTerrainSegment : MonoBehaviour {
 			}
 		}
 
-		children.ForEach(child => DestroyImmediate(child));
-		DestroyImmediate(gameObject.GetComponent<MeshCollider>());
-		DestroyImmediate(gameObject.GetComponent<MeshRenderer>());
-		DestroyImmediate(gameObject.GetComponent<MeshFilter>());
+		for (var i=0; i<segments.Length; i++) {
+			segments[i].Enable();
+		}
+
+		if (mr.enabled) {
+			mr.enabled = false;
+			PTHelpers.segmentCount--;
+		}
+		mc.enabled = false;
 	}
 
-	public IEnumerator MakeSegment(SegmentData d) {
-		var children = new List<GameObject>();
-		foreach (Transform child in transform) children.Add(child.gameObject);
-		subdivided = false;
-
+	private IEnumerator MakeSegment(SegmentData d) {
 		var mf = gameObject.AddComponent<MeshFilter>();
 		mr = gameObject.AddComponent<MeshRenderer>();
+		mc = gameObject.AddComponent<MeshCollider>();
+
+		if (Application.isPlaying || d.editorSubdivisions != 0) {
+			mr.enabled = false;
+			mr.enabled = false;
+		}
 		mr.receiveShadows = false;
-		var mc = gameObject.AddComponent<MeshCollider>();
 
 		if (Application.isPlaying) {
-			yield return StartCoroutine(SegmentGenerator.Generate(d.resolution,
-				d.radius, 
-				d.topLeft, 
-				d.topRight,
-				d.bottomLeft,
-				d.bottomRight,
-				d.displace,
-				mf, mc));
+			yield return StartCoroutine(SegmentGenerator.Generate(d, mf, mc));
 		} else {
-			IEnumerator e = SegmentGenerator.Generate(d.resolution,
-				d.radius, 
-				d.topLeft, 
-				d.topRight,
-				d.bottomLeft,
-				d.bottomRight,
-				d.displace,
-				mf, mc);
+			IEnumerator e = SegmentGenerator.Generate(d, mf, mc);
 			while (e.MoveNext());
 		}
 		mr.sharedMaterial = d.mainMaterial;
-		PTHelpers.Add();
+	}
 
-		children.ForEach(child => {
-			if (child.GetComponent<MeshRenderer>().enabled) PTHelpers.Remove();
-			DestroyImmediate(child);
-		});
+	private void UpdateVisibility() {
+		var horizonAngle = Mathf.Acos(d.radius/Camera.main.transform.position.magnitude) * Mathf.Rad2Deg;
+		if (!Application.isPlaying || PTHelpers.GetAngle(d) < horizonAngle+1f) {
+			if (!mr.enabled) {
+				mr.enabled = true;
+				PTHelpers.segmentCount++;
+			}
+		} else {
+			if (mr.enabled) {
+				mr.enabled = false;
+				PTHelpers.segmentCount--;
+			}
+		}
 	}
 }

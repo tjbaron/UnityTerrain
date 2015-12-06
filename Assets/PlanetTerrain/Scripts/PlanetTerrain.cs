@@ -2,51 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public enum NOISE {Perlin,Worley}
-
-[System.Serializable]
-public class DisplacementLayer {
-	public NOISE noise;
-	public float seed;
-	public float height;
-	public float detail;
-	public AnimationCurve heightStrength;
-	public AnimationCurve equatorStrength;
-}
-
-[System.Serializable]
-public class SegmentData {
-	public float radius;
-	public Vector3 topLeft;
-	public Vector3 topRight;
-	public Vector3 bottomLeft;
-	public Vector3 bottomRight;
-	public DisplacementLayer[] displace;
-	public Material mainMaterial;
-	public Material waterMaterial;
-	public int resolution;
-	public int maxSubdivisions;
-	public int editorSubdivisions;
-	public float degreesPerQuad = 6f;
-	public SegmentData subdivCopy(Vector3[] corners) {
-		var d = new SegmentData();
-		d.radius = radius;
-		d.topLeft = corners[0];
-		d.topRight = corners[1];
-		d.bottomLeft = corners[2];
-		d.bottomRight = corners[3];
-		d.displace = displace;
-		d.mainMaterial = mainMaterial;
-		d.waterMaterial = waterMaterial;
-		d.resolution = resolution;
-		d.maxSubdivisions = maxSubdivisions-1;
-		//Debug.Log(d.maxSubdivisions);
-		d.editorSubdivisions = editorSubdivisions-1;
-		d.degreesPerQuad = degreesPerQuad;
-		return d;
-	}
-}
-
 public class PlanetTerrain : MonoBehaviour {
 	public Transform waterSphere;
 	public int segmentResolution = 8;
@@ -142,10 +97,16 @@ public class PlanetTerrain : MonoBehaviour {
 				IEnumerator e = seg.Generate(d);
     			while (e.MoveNext());
 			}
+			seg.Enable();
 		}
 	}
 
+	/*void Start() {
+		displacementLayers[0].Save();
+	}*/
+
 	void Update() {
+		Debug.Log(PTHelpers.segmentCount);
 		if (!busy) {
 			StartCoroutine(RefreshTerrain());
 		}

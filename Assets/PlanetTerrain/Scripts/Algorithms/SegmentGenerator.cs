@@ -7,32 +7,32 @@ public static class SegmentGenerator {
 		return t*b + (1-t)*a;
 	}
 
-	public static IEnumerator Generate(int segmentResolution, float radius, Vector3 xa, Vector3 xb, Vector3 ya, Vector3 yb, DisplacementLayer[] displace, MeshFilter mf, MeshCollider mc) {
-		Vector3[] newVertices = new Vector3[(segmentResolution+1)*(segmentResolution+1)];
-		Vector3[] newNormals = new Vector3[(segmentResolution+1)*(segmentResolution+1)];
-		Vector2[] newUV = new Vector2[(segmentResolution+1)*(segmentResolution+1)];
-		int[] newTriangles = new int[segmentResolution*segmentResolution*3*2];
+	public static IEnumerator Generate(SegmentData d, MeshFilter mf, MeshCollider mc) {
+		Vector3[] newVertices = new Vector3[(d.resolution+1)*(d.resolution+1)];
+		Vector3[] newNormals = new Vector3[(d.resolution+1)*(d.resolution+1)];
+		Vector2[] newUV = new Vector2[(d.resolution+1)*(d.resolution+1)];
+		int[] newTriangles = new int[d.resolution*d.resolution*3*2];
 
 		
-		for (int y=0; y<segmentResolution+1; y++) {
-			for (int x=0; x<segmentResolution+1; x++) {
-				var v = (y*(segmentResolution+1))+x;
+		for (int y=0; y<d.resolution+1; y++) {
+			for (int x=0; x<d.resolution+1; x++) {
+				var v = (y*(d.resolution+1))+x;
 				Vector3 p = Lerp(
-					Lerp(xa, xb, x/(float)segmentResolution),
-					Lerp(ya, yb, x/(float)segmentResolution),
-					y/(float)segmentResolution).normalized;
+					Lerp(d.topLeft, d.topRight, x/(float)d.resolution),
+					Lerp(d.bottomLeft, d.bottomRight, x/(float)d.resolution),
+					y/(float)d.resolution).normalized;
 
-				newVertices[v] = p * GetHeight(p, radius, displace);
-				newUV[v] = new Vector2(x/(float)segmentResolution, y/(float)segmentResolution);
+				newVertices[v] = p * GetHeight(p, d.radius, d.displace);
+				newUV[v] = new Vector2(x/(float)d.resolution, y/(float)d.resolution);
 
 				if (x > 0 && y > 0) {
-					var i = ((x-1)*segmentResolution*6)+((y-1)*6);
+					var i = ((x-1)*d.resolution*6)+((y-1)*6);
 					newTriangles[i] = v;
 					newTriangles[i+1] = v-1;
-					newTriangles[i+2] = v-segmentResolution-1;
+					newTriangles[i+2] = v-d.resolution-1;
 					newTriangles[i+3] = v-1;
-					newTriangles[i+4] = v-segmentResolution-2;
-					newTriangles[i+5] = v-segmentResolution-1;
+					newTriangles[i+4] = v-d.resolution-2;
+					newTriangles[i+5] = v-d.resolution-1;
 				}
 				//if (y%1024==0) yield return null;
 			}
@@ -45,16 +45,16 @@ public static class SegmentGenerator {
 		mesh.RecalculateNormals();
 
 		newNormals = mesh.normals;
-		for (var x=0; x<segmentResolution+1; x++) {
-			newNormals[x] = FindNormal(segmentResolution, radius, x, 0, xa, xb, ya, yb, displace);
-			var i = (segmentResolution*(segmentResolution+1))+x;
-			newNormals[i] = FindNormal(segmentResolution, radius, x, segmentResolution, xa, xb, ya, yb, displace);
+		for (var x=0; x<d.resolution+1; x++) {
+			newNormals[x] = FindNormal(d, x, 0);
+			var i = (d.resolution*(d.resolution+1))+x;
+			newNormals[i] = FindNormal(d, x, d.resolution);
 		}
-		for (var y=0; y<segmentResolution+1; y++) {
-			var i = y*(segmentResolution+1);
-			newNormals[i] = FindNormal(segmentResolution, radius, 0, y, xa, xb, ya, yb, displace);
-			i = (y*(segmentResolution+1)) + segmentResolution;
-			newNormals[i] = FindNormal(segmentResolution, radius, segmentResolution, y, xa, xb, ya, yb, displace);
+		for (var y=0; y<d.resolution+1; y++) {
+			var i = y*(d.resolution+1);
+			newNormals[i] = FindNormal(d, 0, y);
+			i = (y*(d.resolution+1)) + d.resolution;
+			newNormals[i] = FindNormal(d, d.resolution, y);
 		}
 		mesh.normals = newNormals;
 
@@ -73,8 +73,41 @@ public static class SegmentGenerator {
 				if (maxHeight > 0f) strength = d.heightStrength.Evaluate(addedHeight/maxHeight);
 				if (d.noise == NOISE.Perlin) {
 					addedHeight += d.height * Noise.Perlin(d.detail*p.x+d.seed,d.detail*p.y,d.detail*p.z) * strength;
-				} else {
+				} else if (d.noise == NOISE.Worley) {
 					addedHeight += d.height * Noise.Worley(d.detail*p.x+d.seed,d.detail*p.y,d.detail*p.z) * strength;
+				} else {
+					var mag = new Vector3(Mathf.Abs(p.x), Mathf.Abs(p.y), Mathf.Abs(p.z));
+					if (p.x >= mag.y && p.x >= mag.z) { // Right
+						var a = p/p.x;
+						var x = (a.z+1f)/2f;
+						var y = (a.y+1f)/2f;
+						addedHeight += d.height * d.texture.GetPixelBilinear(Mathf.Lerp(0.5f,0.75f,x), Mathf.Lerp(0.333f,0.666f,y)).grayscale;
+					} else if (mag.x >= mag.y && mag.x >= mag.z) { // Left
+						var a = p/p.x;
+						var x = (a.z+1f)/2f;
+						var y = 1f-((a.y+1f)/2f);
+						addedHeight += d.height * d.texture.GetPixelBilinear(Mathf.Lerp(0f,0.25f,x), Mathf.Lerp(0.333f,0.666f,y)).grayscale;
+					} else if (p.y >= mag.x && p.y >= mag.z) { // Top
+						var a = p/p.y;
+						var x = (a.x+1f)/2f;
+						var y = (a.z+1f)/2f;
+						addedHeight += d.height * d.texture.GetPixelBilinear(Mathf.Lerp(0.25f,0.5f,x), Mathf.Lerp(0.666f,1f,y)).grayscale;
+					} else if (mag.y >= mag.x && mag.y >= mag.z) { // Bottom
+						var a = p/p.y;
+						var x = 1f-((a.x+1f)/2f);
+						var y = (a.z+1f)/2f;
+						addedHeight += d.height * d.texture.GetPixelBilinear(Mathf.Lerp(0.25f,0.5f,x), Mathf.Lerp(0f,0.333f,y)).grayscale;
+					} else if (p.z >= mag.x && p.z >= mag.y) { // Back
+						var a = p/p.z;
+						var x = 1-((a.x+1f)/2f);
+						var y = (a.y+1f)/2f;
+						addedHeight += d.height * d.texture.GetPixelBilinear(Mathf.Lerp(0.75f,1f,x), Mathf.Lerp(0.333f,0.666f,y)).grayscale;
+					} else if (mag.z >= mag.x && mag.z >= mag.y) { // Front
+						var a = -p/p.z;
+						var x = (a.x+1f)/2f;
+						var y = (a.y+1f)/2f;
+						addedHeight += d.height * d.texture.GetPixelBilinear(Mathf.Lerp(0.25f,0.5f,x), Mathf.Lerp(0.333f,0.666f,y)).grayscale;
+					}
 				}
 				maxHeight += d.height;
 			}
@@ -83,32 +116,32 @@ public static class SegmentGenerator {
 		return radius;
 	}
 
-	private static Vector3 FindNormal(int segmentResolution, float radius, int x, int y, Vector3 topLeft, Vector3 topRight, Vector3 bottomLeft, Vector3 bottomRight, DisplacementLayer[] displace) {
+	private static Vector3 FindNormal(SegmentData d, int x, int y) {
 		var center = Lerp(
-			Lerp(topLeft, topRight, x/(float)segmentResolution),
-			Lerp(bottomLeft, bottomRight, x/(float)segmentResolution),
-			y/(float)segmentResolution).normalized;
+			Lerp(d.topLeft, d.topRight, x/(float)d.resolution),
+			Lerp(d.bottomLeft, d.bottomRight, x/(float)d.resolution),
+			y/(float)d.resolution).normalized;
 		var left = Lerp(
-			Lerp(topLeft, topRight, (x-1)/(float)segmentResolution),
-			Lerp(bottomLeft, bottomRight, (x-1)/(float)segmentResolution),
-			y/(float)segmentResolution).normalized;
+			Lerp(d.topLeft, d.topRight, (x-1)/(float)d.resolution),
+			Lerp(d.bottomLeft, d.bottomRight, (x-1)/(float)d.resolution),
+			y/(float)d.resolution).normalized;
 		var right = Lerp(
-			Lerp(topLeft, topRight, (x+1)/(float)segmentResolution),
-			Lerp(bottomLeft, bottomRight, (x+1)/(float)segmentResolution),
-			y/(float)segmentResolution).normalized;
+			Lerp(d.topLeft, d.topRight, (x+1)/(float)d.resolution),
+			Lerp(d.bottomLeft, d.bottomRight, (x+1)/(float)d.resolution),
+			y/(float)d.resolution).normalized;
 		var top = Lerp(
-			Lerp(topLeft, topRight, x/(float)segmentResolution),
-			Lerp(bottomLeft, bottomRight, x/(float)segmentResolution),
-			(y-1)/(float)segmentResolution).normalized;
+			Lerp(d.topLeft, d.topRight, x/(float)d.resolution),
+			Lerp(d.bottomLeft, d.bottomRight, x/(float)d.resolution),
+			(y-1)/(float)d.resolution).normalized;
 		var bottom = Lerp(
-			Lerp(topLeft, topRight, x/(float)segmentResolution),
-			Lerp(bottomLeft, bottomRight, x/(float)segmentResolution),
-			(y+1)/(float)segmentResolution).normalized;
-		center = center * GetHeight(center, radius, displace);
-		left = left * GetHeight(left, radius, displace);
-		right = right * GetHeight(right, radius, displace);
-		top = top * GetHeight(top, radius, displace);
-		bottom = bottom * GetHeight(bottom, radius, displace);
+			Lerp(d.topLeft, d.topRight, x/(float)d.resolution),
+			Lerp(d.bottomLeft, d.bottomRight, x/(float)d.resolution),
+			(y+1)/(float)d.resolution).normalized;
+		center = center * GetHeight(center, d.radius, d.displace);
+		left = left * GetHeight(left, d.radius, d.displace);
+		right = right * GetHeight(right, d.radius, d.displace);
+		top = top * GetHeight(top, d.radius, d.displace);
+		bottom = bottom * GetHeight(bottom, d.radius, d.displace);
 
 		var n = Vector3.Cross(left-center, top-center);
 		n += Vector3.Cross(top-center, right-center);
