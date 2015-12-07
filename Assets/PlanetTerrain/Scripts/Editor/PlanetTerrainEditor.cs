@@ -22,18 +22,19 @@ public class PlanetTerrainEditor : Editor {
 
 	
 	void OnEnable () {
-		segmentResolution = serializedObject.FindProperty("segmentResolution");
-		minSubdivisions = serializedObject.FindProperty("minSubdivisions");
-		maxSubdivisions = serializedObject.FindProperty("maxSubdivisions");
-		editorSubdivisions = serializedObject.FindProperty("editorSubdivisions");
-		radius = serializedObject.FindProperty("radius");
-		waterHeight = serializedObject.FindProperty("waterHeight");
+		var r = serializedObject.FindProperty("planet");
+		segmentResolution = r.FindPropertyRelative("segmentResolution");
+		minSubdivisions = r.FindPropertyRelative("minSubdivisions");
+		maxSubdivisions = r.FindPropertyRelative("maxSubdivisions");
+		editorSubdivisions = r.FindPropertyRelative("editorSubdivisions");
+		radius = r.FindPropertyRelative("radius");
+		waterHeight = r.FindPropertyRelative("waterHeight");
 
-		mainMaterial = serializedObject.FindProperty("mainMaterial");
-		waterMaterial = serializedObject.FindProperty("waterMaterial");
-		waterMesh = serializedObject.FindProperty("waterSphere");
+		mainMaterial = r.FindPropertyRelative("mainMaterial");
+		waterMaterial = r.FindPropertyRelative("waterMaterial");
+		waterMesh = r.FindPropertyRelative("waterSphere");
 
-		displacements = serializedObject.FindProperty("displacementLayers");
+		displacements = r.FindPropertyRelative("displacementLayers");
 	}
 
 	public override void OnInspectorGUI() {
@@ -66,6 +67,10 @@ public class PlanetTerrainEditor : Editor {
 				EditorGUILayout.PropertyField(e.FindPropertyRelative("heightStrength"));
 				EditorGUILayout.PropertyField(e.FindPropertyRelative("texture"));
 			}
+		}
+
+		if (GUILayout.Button("New Displacement")) {
+			displacements.InsertArrayElementAtIndex(0);
 		}
 
 		EditorGUILayout.Space();

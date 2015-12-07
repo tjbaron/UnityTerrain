@@ -44,10 +44,11 @@ public static class PTHelpers {
 	};
 
 	public static float GetDistance(SegmentData d) {
-		var tl = d.topLeft.normalized * d.radius;
-		var tr = d.topRight.normalized * d.radius;
-		var bl = d.bottomLeft.normalized * d.radius;
-		var br = d.bottomRight.normalized * d.radius;
+		var rad = d.planet.radius;
+		var tl = d.topLeft.normalized * rad;
+		var tr = d.topRight.normalized * rad;
+		var bl = d.bottomLeft.normalized * rad;
+		var br = d.bottomRight.normalized * rad;
 		var cameraPos = Camera.main.transform.position;
 		return Mathf.Min(
 			Vector3.Distance((tl+br)/2f, cameraPos),
@@ -59,10 +60,11 @@ public static class PTHelpers {
 	}
 
 	public static float GetAngle(SegmentData d) {
-		var tl = d.topLeft.normalized * d.radius;
-		var tr = d.topRight.normalized * d.radius;
-		var bl = d.bottomLeft.normalized * d.radius;
-		var br = d.bottomRight.normalized * d.radius;
+		var rad = d.planet.radius;
+		var tl = d.topLeft.normalized * rad;
+		var tr = d.topRight.normalized * rad;
+		var bl = d.bottomLeft.normalized * rad;
+		var br = d.bottomRight.normalized * rad;
 		var cameraDir = Camera.main.transform.position.normalized;	
 		return Mathf.Min(
 			Vector3.Angle((tl+br).normalized, cameraDir),
@@ -74,8 +76,9 @@ public static class PTHelpers {
 	}
 
 	public static float GetSize(SegmentData d) {
-		var tl = d.topLeft.normalized * d.radius;
-		var br = d.bottomRight.normalized * d.radius;
+		var rad = d.planet.radius;
+		var tl = d.topLeft.normalized * rad;
+		var br = d.bottomRight.normalized * rad;
 		return Vector3.Distance(tl,br);
 	}
 }

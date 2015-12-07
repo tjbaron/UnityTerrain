@@ -8,31 +8,34 @@ public static class SegmentGenerator {
 	}
 
 	public static IEnumerator Generate(SegmentData d, MeshFilter mf, MeshCollider mc) {
-		Vector3[] newVertices = new Vector3[(d.resolution+1)*(d.resolution+1)];
-		Vector3[] newNormals = new Vector3[(d.resolution+1)*(d.resolution+1)];
-		Vector2[] newUV = new Vector2[(d.resolution+1)*(d.resolution+1)];
-		int[] newTriangles = new int[d.resolution*d.resolution*3*2];
+		var res = d.planet.segmentResolution;
+		var rad = d.planet.radius;
+
+		Vector3[] newVertices = new Vector3[(res+1)*(res+1)];
+		Vector3[] newNormals = new Vector3[(res+1)*(res+1)];
+		Vector2[] newUV = new Vector2[(res+1)*(res+1)];
+		int[] newTriangles = new int[res*res*3*2];
 
 		
-		for (int y=0; y<d.resolution+1; y++) {
-			for (int x=0; x<d.resolution+1; x++) {
-				var v = (y*(d.resolution+1))+x;
+		for (int y=0; y<res+1; y++) {
+			for (int x=0; x<res+1; x++) {
+				var v = (y*(res+1))+x;
 				Vector3 p = Lerp(
-					Lerp(d.topLeft, d.topRight, x/(float)d.resolution),
-					Lerp(d.bottomLeft, d.bottomRight, x/(float)d.resolution),
-					y/(float)d.resolution).normalized;
+					Lerp(d.topLeft, d.topRight, x/(float)res),
+					Lerp(d.bottomLeft, d.bottomRight, x/(float)res),
+					y/(float)res).normalized;
 
-				newVertices[v] = p * GetHeight(p, d.radius, d.displace);
-				newUV[v] = new Vector2(x/(float)d.resolution, y/(float)d.resolution);
+				newVertices[v] = p * GetHeight(p, rad, d.planet.displacementLayers);
+				newUV[v] = new Vector2(x/(float)res, y/(float)res);
 
 				if (x > 0 && y > 0) {
-					var i = ((x-1)*d.resolution*6)+((y-1)*6);
+					var i = ((x-1)*res*6)+((y-1)*6);
 					newTriangles[i] = v;
 					newTriangles[i+1] = v-1;
-					newTriangles[i+2] = v-d.resolution-1;
+					newTriangles[i+2] = v-res-1;
 					newTriangles[i+3] = v-1;
-					newTriangles[i+4] = v-d.resolution-2;
-					newTriangles[i+5] = v-d.resolution-1;
+					newTriangles[i+4] = v-res-2;
+					newTriangles[i+5] = v-res-1;
 				}
 				//if (y%1024==0) yield return null;
 			}
@@ -45,16 +48,16 @@ public static class SegmentGenerator {
 		mesh.RecalculateNormals();
 
 		newNormals = mesh.normals;
-		for (var x=0; x<d.resolution+1; x++) {
+		for (var x=0; x<res+1; x++) {
 			newNormals[x] = FindNormal(d, x, 0);
-			var i = (d.resolution*(d.resolution+1))+x;
-			newNormals[i] = FindNormal(d, x, d.resolution);
+			var i = (res*(res+1))+x;
+			newNormals[i] = FindNormal(d, x, res);
 		}
-		for (var y=0; y<d.resolution+1; y++) {
-			var i = y*(d.resolution+1);
+		for (var y=0; y<res+1; y++) {
+			var i = y*(res+1);
 			newNormals[i] = FindNormal(d, 0, y);
-			i = (y*(d.resolution+1)) + d.resolution;
-			newNormals[i] = FindNormal(d, d.resolution, y);
+			i = (y*(res+1)) + res;
+			newNormals[i] = FindNormal(d, res, y);
 		}
 		mesh.normals = newNormals;
 
@@ -117,31 +120,34 @@ public static class SegmentGenerator {
 	}
 
 	private static Vector3 FindNormal(SegmentData d, int x, int y) {
+		var res = d.planet.segmentResolution;
+		var rad = d.planet.radius;
+		var displace = d.planet.displacementLayers;
 		var center = Lerp(
-			Lerp(d.topLeft, d.topRight, x/(float)d.resolution),
-			Lerp(d.bottomLeft, d.bottomRight, x/(float)d.resolution),
-			y/(float)d.resolution).normalized;
+			Lerp(d.topLeft, d.topRight, x/(float)res),
+			Lerp(d.bottomLeft, d.bottomRight, x/(float)res),
+			y/(float)res).normalized;
 		var left = Lerp(
-			Lerp(d.topLeft, d.topRight, (x-1)/(float)d.resolution),
-			Lerp(d.bottomLeft, d.bottomRight, (x-1)/(float)d.resolution),
-			y/(float)d.resolution).normalized;
+			Lerp(d.topLeft, d.topRight, (x-1)/(float)res),
+			Lerp(d.bottomLeft, d.bottomRight, (x-1)/(float)res),
+			y/(float)res).normalized;
 		var right = Lerp(
-			Lerp(d.topLeft, d.topRight, (x+1)/(float)d.resolution),
-			Lerp(d.bottomLeft, d.bottomRight, (x+1)/(float)d.resolution),
-			y/(float)d.resolution).normalized;
+			Lerp(d.topLeft, d.topRight, (x+1)/(float)res),
+			Lerp(d.bottomLeft, d.bottomRight, (x+1)/(float)res),
+			y/(float)res).normalized;
 		var top = Lerp(
-			Lerp(d.topLeft, d.topRight, x/(float)d.resolution),
-			Lerp(d.bottomLeft, d.bottomRight, x/(float)d.resolution),
-			(y-1)/(float)d.resolution).normalized;
+			Lerp(d.topLeft, d.topRight, x/(float)res),
+			Lerp(d.bottomLeft, d.bottomRight, x/(float)res),
+			(y-1)/(float)res).normalized;
 		var bottom = Lerp(
-			Lerp(d.topLeft, d.topRight, x/(float)d.resolution),
-			Lerp(d.bottomLeft, d.bottomRight, x/(float)d.resolution),
-			(y+1)/(float)d.resolution).normalized;
-		center = center * GetHeight(center, d.radius, d.displace);
-		left = left * GetHeight(left, d.radius, d.displace);
-		right = right * GetHeight(right, d.radius, d.displace);
-		top = top * GetHeight(top, d.radius, d.displace);
-		bottom = bottom * GetHeight(bottom, d.radius, d.displace);
+			Lerp(d.topLeft, d.topRight, x/(float)res),
+			Lerp(d.bottomLeft, d.bottomRight, x/(float)res),
+			(y+1)/(float)res).normalized;
+		center = center * GetHeight(center, rad, displace);
+		left = left * GetHeight(left, rad, displace);
+		right = right * GetHeight(right, rad, displace);
+		top = top * GetHeight(top, rad, displace);
+		bottom = bottom * GetHeight(bottom, rad, displace);
 
 		var n = Vector3.Cross(left-center, top-center);
 		n += Vector3.Cross(top-center, right-center);

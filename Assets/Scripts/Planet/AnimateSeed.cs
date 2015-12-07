@@ -14,7 +14,7 @@ public class AnimateSeed : MonoBehaviour {
 	void Update () {
 		lastChange += Time.deltaTime;
 		if (lastChange > 0.3f) {
-			planet.displacementLayers[0].seed += 0.05f;
+			planet.planet.displacementLayers[0].seed += 0.05f;
 			planet.UpdateTerrain();
 			lastChange = 0.0f;
 		}

@@ -8,7 +8,9 @@ public class PlanetTerrainSegment : MonoBehaviour {
 	public bool isEnabled = false;
 	public bool subdivided = false;
 	public bool generated = false;
+	public bool isVisible = false;
 	public SegmentData d;
+	public PlanetData p;
 	public MeshRenderer mr = null;
 	public MeshCollider mc = null;
 	public PlanetTerrainSegment[] segments = new PlanetTerrainSegment[4];
@@ -31,9 +33,13 @@ public class PlanetTerrainSegment : MonoBehaviour {
 	}
 
 	public IEnumerator Generate(SegmentData newdata=null) {
-		if (newdata != null) d = newdata;
+		if (newdata != null) {
+			d = newdata;
+			p = d.planet;
+		}
 
 		if (!generated) {
+			Debug.Log(d.subdivision);
 			// Generate this segment.
 			gameObject.hideFlags = HideFlags.HideInHierarchy;
 			if (Application.isPlaying) {
@@ -47,7 +53,7 @@ public class PlanetTerrainSegment : MonoBehaviour {
 			yield return StartCoroutine(SubdivideDecider());
 		}
 
-		if (!Application.isPlaying && d.editorSubdivisions > 0) {
+		if (!Application.isPlaying && p.editorSubdivisions-d.subdivision > 0) {
 			IEnumerator e = SubdivideDecider();
 	    	while (e.MoveNext());
 		}
@@ -62,7 +68,7 @@ public class PlanetTerrainSegment : MonoBehaviour {
 
 	private IEnumerator SubdivideDecider() {
 		// Decide if the mesh should be subdivided
-		if (!Application.isPlaying || d.minSubdivisions>0 || (Application.isPlaying && d.maxSubdivisions > 0 && PTHelpers.GetDistance(d) < PTHelpers.GetSize(d))) {
+		if (!Application.isPlaying || p.minSubdivisions-d.subdivision>0 || (Application.isPlaying && isVisible && p.maxSubdivisions-d.subdivision > 0 && PTHelpers.GetDistance(d) < PTHelpers.GetSize(d))) {
 			if (!subdivided) {
 				if (Application.isPlaying) {
 					yield return StartCoroutine(SubdivideSegment(d));
@@ -121,7 +127,7 @@ public class PlanetTerrainSegment : MonoBehaviour {
 			segments[i].Enable();
 		}
 
-		if (d.minSubdivisions <= 0) {
+		if (p.minSubdivisions-d.subdivision <= 0) {
 			if (mr.enabled) {
 				mr.enabled = false;
 				PTHelpers.segmentCount--;
@@ -131,12 +137,12 @@ public class PlanetTerrainSegment : MonoBehaviour {
 	}
 
 	private IEnumerator MakeSegment(SegmentData d) {
-		if (d.minSubdivisions <= 0) {
+		if (p.minSubdivisions-d.subdivision <= 0) {
 			var mf = gameObject.AddComponent<MeshFilter>();
 			mr = gameObject.AddComponent<MeshRenderer>();
 			mc = gameObject.AddComponent<MeshCollider>();
 
-			if (Application.isPlaying || d.editorSubdivisions != 0) {
+			if (Application.isPlaying || p.editorSubdivisions-d.subdivision != 0) {
 				mr.enabled = false;
 				mr.enabled = false;
 			}
@@ -148,18 +154,20 @@ public class PlanetTerrainSegment : MonoBehaviour {
 				IEnumerator e = SegmentGenerator.Generate(d, mf, mc);
 				while (e.MoveNext());
 			}
-			mr.sharedMaterial = d.mainMaterial;
+			mr.sharedMaterial = p.mainMaterial;
 		}
 	}
 
 	private void UpdateVisibility() {
-		var horizonAngle = Mathf.Acos(d.radius/Camera.main.transform.position.magnitude) * Mathf.Rad2Deg;
+		var horizonAngle = Mathf.Acos(p.radius/Camera.main.transform.position.magnitude) * Mathf.Rad2Deg;
 		if (!Application.isPlaying || PTHelpers.GetAngle(d) < horizonAngle+1f) {
+			isVisible = true;
 			if (!mr.enabled) {
 				mr.enabled = true;
 				PTHelpers.segmentCount++;
 			}
 		} else {
+			isVisible = false;
 			if (mr.enabled) {
 				mr.enabled = false;
 				PTHelpers.segmentCount--;
