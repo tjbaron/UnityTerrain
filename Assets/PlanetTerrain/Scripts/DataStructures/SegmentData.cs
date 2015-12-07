@@ -9,7 +9,9 @@ public class SegmentData {
 	public Vector3 topRight;
 	public Vector3 bottomLeft;
 	public Vector3 bottomRight;
-	public SegmentData subdivCopy(Vector3[] corners) {
+	public Vector2 uvMin;
+	public Vector2 uvMax;
+	public SegmentData subdivCopy(Vector3[] corners, Vector2[] uvs) {
 		var d = new SegmentData();
 		d.planet = planet;
 		d.subdivision = subdivision+1;
@@ -17,6 +19,8 @@ public class SegmentData {
 		d.topRight = corners[1];
 		d.bottomLeft = corners[2];
 		d.bottomRight = corners[3];
+		d.uvMin = uvs[0];
+		d.uvMax = uvs[1];
 		return d;
 	}
 }

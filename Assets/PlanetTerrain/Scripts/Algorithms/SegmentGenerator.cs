@@ -26,7 +26,7 @@ public static class SegmentGenerator {
 					y/(float)res).normalized;
 
 				newVertices[v] = p * GetHeight(p, rad, d.planet.displacementLayers);
-				newUV[v] = new Vector2(x/(float)res, y/(float)res);
+				newUV[v] = new Vector2(Mathf.Lerp(d.uvMin.x, d.uvMax.x, x/(float)res), Mathf.Lerp(d.uvMin.y, d.uvMax.y, y/(float)res));
 
 				if (x > 0 && y > 0) {
 					var i = ((x-1)*res*6)+((y-1)*6);
@@ -79,38 +79,8 @@ public static class SegmentGenerator {
 				} else if (d.noise == NOISE.Worley) {
 					addedHeight += d.height * Noise.Worley(d.detail*p.x+d.seed,d.detail*p.y,d.detail*p.z) * strength;
 				} else {
-					var mag = new Vector3(Mathf.Abs(p.x), Mathf.Abs(p.y), Mathf.Abs(p.z));
-					if (p.x >= mag.y && p.x >= mag.z) { // Right
-						var a = p/p.x;
-						var x = (a.z+1f)/2f;
-						var y = (a.y+1f)/2f;
-						addedHeight += d.height * d.texture.GetPixelBilinear(Mathf.Lerp(0.501f,0.744f,x), Mathf.Lerp(0.334f,0.665f,y)).grayscale;
-					} else if (mag.x >= mag.y && mag.x >= mag.z) { // Left
-						var a = p/p.x;
-						var x = (a.z+1f)/2f;
-						var y = 1f-((a.y+1f)/2f);
-						addedHeight += d.height * d.texture.GetPixelBilinear(Mathf.Lerp(0.001f,0.249f,x), Mathf.Lerp(0.334f,0.665f,y)).grayscale;
-					} else if (p.y >= mag.x && p.y >= mag.z) { // Top
-						var a = p/p.y;
-						var x = (a.x+1f)/2f;
-						var y = (a.z+1f)/2f;
-						addedHeight += d.height * d.texture.GetPixelBilinear(Mathf.Lerp(0.251f,0.499f,x), Mathf.Lerp(0.666f,0.999f,y)).grayscale;
-					} else if (mag.y >= mag.x && mag.y >= mag.z) { // Bottom
-						var a = p/p.y;
-						var x = 1f-((a.x+1f)/2f);
-						var y = (a.z+1f)/2f;
-						addedHeight += d.height * d.texture.GetPixelBilinear(Mathf.Lerp(0.251f,0.499f,x), Mathf.Lerp(0.001f,0.333f,y)).grayscale;
-					} else if (p.z >= mag.x && p.z >= mag.y) { // Back
-						var a = p/p.z;
-						var x = 1-((a.x+1f)/2f);
-						var y = (a.y+1f)/2f;
-						addedHeight += d.height * d.texture.GetPixelBilinear(Mathf.Lerp(0.751f,0.999f,x), Mathf.Lerp(0.334f,0.665f,y)).grayscale;
-					} else if (mag.z >= mag.x && mag.z >= mag.y) { // Front
-						var a = -p/p.z;
-						var x = (a.x+1f)/2f;
-						var y = (a.y+1f)/2f;
-						addedHeight += d.height * d.texture.GetPixelBilinear(Mathf.Lerp(0.251f,0.499f,x), Mathf.Lerp(0.334f,0.665f,y)).grayscale;
-					}
+					var np = PTHelpers.GetHeightmapCoord(p);
+					addedHeight += d.height * d.texture.GetPixelBilinear(np.x, np.y).grayscale;
 				}
 				maxHeight += d.height;
 			}

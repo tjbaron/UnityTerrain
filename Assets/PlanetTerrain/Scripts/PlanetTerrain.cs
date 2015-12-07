@@ -6,12 +6,18 @@ public class PlanetTerrain : MonoBehaviour {
 	public PlanetData planet = new PlanetData();
 
 	private bool busy = false;
-	public PlanetTerrainSegment[] segments = new PlanetTerrainSegment[6];
+	public List<PlanetTerrainSegment> segments = new List<PlanetTerrainSegment>();
+	public Transform water = null;
 
 	public void UpdateTerrain() {
+		while (segments.Count>0) {
+			segments[0].Disable();
+			segments.RemoveAt(0);
+		}
 		var children = new List<GameObject>();
 		foreach (Transform child in transform) children.Add(child.gameObject);
 		children.ForEach(child => DestroyImmediate(child));
+		
 		if (Application.isPlaying) {
 			StartCoroutine(MakeSphere());
 		} else {
@@ -20,24 +26,33 @@ public class PlanetTerrain : MonoBehaviour {
 		}
 	}
 
+	public void ClearTerrain() {
+		var children = new List<GameObject>();
+		foreach (Transform child in transform) children.Add(child.gameObject);
+		children.ForEach(child => DestroyImmediate(child));
+		segments = new List<PlanetTerrainSegment>();
+	}
+
 	private IEnumerator MakeSphere() {
+		busy = true;
 		if (planet.waterSphere != null && planet.waterHeight > 0f) {
-			var ws = Instantiate(planet.waterSphere);
-			ws.localScale *= (planet.radius+planet.waterHeight)/1000f;
-			ws.parent = transform;
-			ws.gameObject.hideFlags = HideFlags.HideInHierarchy;
-			ws.GetComponent<Renderer>().material = planet.waterMaterial;
+			water = Instantiate(planet.waterSphere);
+			water.localScale *= (planet.radius+planet.waterHeight)/1000f;
+			water.parent = transform;
+			water.gameObject.hideFlags = HideFlags.HideInHierarchy;
+			water.GetComponent<Renderer>().material = planet.waterMaterial;
 		}
 		for (var i=0; i<6; i++) {
 			var sd = new SegmentData();
 			sd.planet = planet;
 			sd.topLeft = PTHelpers.cubeSides[i][0]; sd.topRight = PTHelpers.cubeSides[i][1];
 			sd.bottomLeft = PTHelpers.cubeSides[i][2]; sd.bottomRight = PTHelpers.cubeSides[i][3];
+			sd.uvMin = Vector2.zero; sd.uvMax = new Vector2(1f,1f);
 
 			var go = new GameObject();
 			go.GetComponent<Transform>().parent = transform;
 			var seg = go.AddComponent<PlanetTerrainSegment>();
-			segments[i] = seg;
+			segments.Add(seg);
 			if (Application.isPlaying) {
 				yield return StartCoroutine(seg.Generate(sd));
 			} else {
@@ -46,6 +61,7 @@ public class PlanetTerrain : MonoBehaviour {
 			}
 			seg.Enable();
 		}
+		busy = false;
 	}
 
 	/*void Start() {
@@ -61,7 +77,7 @@ public class PlanetTerrain : MonoBehaviour {
 
 	private IEnumerator RefreshTerrain() {
 		busy = true;
-		for (var i=0; i<segments.Length; i++) {
+		for (var i=0; i<segments.Count; i++) {
 			yield return StartCoroutine(segments[i].Generate());
 		}
 		busy = false;

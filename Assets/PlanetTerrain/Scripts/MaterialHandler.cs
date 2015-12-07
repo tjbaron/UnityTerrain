@@ -18,12 +18,22 @@ public class MaterialHandler : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		p = gameObject.GetComponent<PlanetTerrain>().planet;
+
+		var maxHeight = 0f;
+		for (var i=0; i<p.displacementLayers.Length; i++) {
+			var l = p.displacementLayers[i];
+			maxHeight += l.height;
+		}
+
 		p.mainMaterial = mat;
 		mat.SetTexture("_MainTex", mainTexture);
 		mat.SetTexture("_OuterTex", mountainTexture);
 		mat.SetTexture("_PoleTex", poleTexture);
-		mat.SetVector("_CentrePoint", new Vector4(transform.position.x, transform.position.y, transform.position.z));
-		mat.SetFloat("_ChangePoint", p.radius+30f);
+		mat.SetTextureScale("_MainTex", new Vector2(100f,100f));
+		mat.SetTextureScale("_OuterTex", new Vector2(100f,100f));
+		mat.SetTextureScale("_PoleTex", new Vector2(100f,100f));
+		mat.SetVector("_CentrePoint", new Vector4(transform.position.x, transform.position.y, transform.position.z, 0f));
+		mat.SetFloat("_ChangePoint", p.radius+(maxHeight/2f));
 		mat.SetFloat("_EquatorWidth", p.radius/2f);
 	}
 }
