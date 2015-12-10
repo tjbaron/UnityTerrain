@@ -14,4 +14,7 @@ public class PlanetData {
 	public Material mainMaterial;
 	public Material waterMaterial;
 	public DisplacementLayer[] displacementLayers;
+	public PlanetData() {
+		displacementLayers = new DisplacementLayer[0];
+	}
 }

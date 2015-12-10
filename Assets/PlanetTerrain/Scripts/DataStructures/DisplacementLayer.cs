@@ -3,7 +3,7 @@ using System.Collections;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 
-public enum NOISE {Perlin,Worley,Texture}
+public enum NOISE {Perlin,Worley,FractalMapped,Texture}
 
 [System.Serializable]
 public class DisplacementLayer {

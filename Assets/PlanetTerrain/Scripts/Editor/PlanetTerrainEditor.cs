@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 [CustomEditor(typeof(PlanetTerrain))]
 public class PlanetTerrainEditor : Editor {
-	enum TAB {General, Displacement, Objects};
+	enum TAB {General, Displacement, Materials, Objects};
 	TAB tab = TAB.General;
 
 	SerializedProperty segmentResolution;
@@ -23,7 +23,10 @@ public class PlanetTerrainEditor : Editor {
 	SerializedProperty displacements;
 	List<bool> displacementBools = new List<bool>();
 
-	
+	SerializedProperty materials;
+
+	bool customWater = false; bool customGround = false;
+
 	void OnEnable () {
 		var r = serializedObject.FindProperty("planet");
 		segmentResolution = r.FindPropertyRelative("segmentResolution");
@@ -38,26 +41,22 @@ public class PlanetTerrainEditor : Editor {
 		waterMesh = r.FindPropertyRelative("waterSphere");
 
 		displacements = r.FindPropertyRelative("displacementLayers");
+		materials = serializedObject.FindProperty("materials");
 	}
 
 	public override void OnInspectorGUI() {
 		PlanetTerrain pt = (PlanetTerrain)target;
 		serializedObject.Update();
 
+		EditorGUILayout.Space();
 		GUILayout.BeginHorizontal();
-		if (tab == TAB.General) GUI.color = Color.green;
-		if (GUILayout.Button("General")) tab = TAB.General;
-		GUI.color = Color.white;
-
-		if (tab == TAB.Displacement) GUI.color = Color.green;
-		if (GUILayout.Button("Displacement")) tab = TAB.Displacement;
-		GUI.color = Color.white;
-
-		if (tab == TAB.Objects) GUI.color = Color.green;
-		if (GUILayout.Button("Objects")) tab = TAB.Objects;
-		GUI.color = Color.white;
+		if (GUILayout.Toggle(tab == TAB.General, "General", EditorStyles.toolbarButton)) tab = TAB.General;
+		if (GUILayout.Toggle(tab == TAB.Displacement, "Displacement", EditorStyles.toolbarButton)) tab = TAB.Displacement;
+		if (GUILayout.Toggle(tab == TAB.Materials, "Materials", EditorStyles.toolbarButton)) tab = TAB.Materials;
+		if (GUILayout.Toggle(tab == TAB.Objects, "Objects", EditorStyles.toolbarButton)) tab = TAB.Objects;
 		GUILayout.EndHorizontal();
 		EditorGUILayout.Space();
+
 
 		if (tab == TAB.General) {
 			EditorGUILayout.IntSlider(segmentResolution, 2, 64);
@@ -68,29 +67,34 @@ public class PlanetTerrainEditor : Editor {
 			EditorGUILayout.Slider(waterHeight, 0f, 500f);
 
 			EditorGUILayout.Space();
-			EditorGUILayout.PropertyField(mainMaterial);
-			EditorGUILayout.PropertyField(waterMaterial);
 			EditorGUILayout.PropertyField(waterMesh);
 		} else if (tab == TAB.Displacement) {
-			for (var i=0; i<displacements.arraySize; i++) {
-				if (i >= displacementBools.Count) displacementBools.Add(false);
-				var b = displacementBools[i] = EditorGUILayout.Foldout(displacementBools[i], "Displacement Layer "+(i+1).ToString());
-				if(b) {
-					GUILayout.BeginHorizontal();
-						if (i > 0 && GUILayout.Button("^", GUILayout.Width(30))) {
-							displacements.MoveArrayElement(i, i-1);
-							break;
-						}
-						if (i+1 < displacements.arraySize && GUILayout.Button("v", GUILayout.Width(30))) {
-							displacements.MoveArrayElement(i, i+1);
-							break;
-						}
-						if (GUILayout.Button("-", GUILayout.Width(30))) {
-							displacements.DeleteArrayElementAtIndex(i);
-							break;
-						}
-					GUILayout.EndHorizontal();
+			GUILayout.BeginHorizontal();
+				GUILayout.Label("");
+				if (GUILayout.Button("+", GUILayout.Width(30))) {
+					displacements.InsertArrayElementAtIndex(displacements.arraySize);
+				}
+			GUILayout.EndHorizontal();
 
+			for (var i=0; i<displacements.arraySize; i++) {
+				EditorGUILayout.Space();
+				if (i >= displacementBools.Count) displacementBools.Add(false);
+				GUILayout.BeginHorizontal();
+				var b = displacementBools[i] = EditorGUILayout.Foldout(displacementBools[i], "Displacement Layer "+(i+1).ToString());
+				if (i > 0 && GUILayout.Button("^", GUILayout.Width(30))) {
+					displacements.MoveArrayElement(i, i-1);
+					break;
+				}
+				if (i+1 < displacements.arraySize && GUILayout.Button("v", GUILayout.Width(30))) {
+					displacements.MoveArrayElement(i, i+1);
+					break;
+				}
+				if (GUILayout.Button("-", GUILayout.Width(30))) {
+					displacements.DeleteArrayElementAtIndex(i);
+					break;
+				}
+				GUILayout.EndHorizontal();
+				if(b) {
 					var e = displacements.GetArrayElementAtIndex(i);
 					EditorGUILayout.PropertyField(e.FindPropertyRelative("noise"));
 					EditorGUILayout.Slider(e.FindPropertyRelative("seed"), 0f, 65536f);
@@ -101,9 +105,31 @@ public class PlanetTerrainEditor : Editor {
 				}
 			}
 			EditorGUILayout.Space();
-			if (GUILayout.Button("New Displacement")) {
-				displacements.InsertArrayElementAtIndex(displacements.arraySize);
+		} else if (tab == TAB.Materials) {
+			GUILayout.BeginHorizontal();
+				customGround = GUILayout.Toggle(customGround, "Custom Ground");
+				customWater = GUILayout.Toggle(customWater, "Custom Water");
+			GUILayout.EndHorizontal();
+			EditorGUILayout.Space();
+			if (customGround) {
+				EditorGUILayout.PropertyField(mainMaterial);
+			} else {
+				EditorGUILayout.Slider(materials.FindPropertyRelative("textureTransition"), 0f, 1f);
+				EditorGUILayout.PropertyField(materials.FindPropertyRelative("mainTexture"));
 			}
+			EditorGUILayout.Space();
+			if (customWater) {
+				EditorGUILayout.PropertyField(waterMaterial);
+			} else {
+
+			}
+		} else if (tab == TAB.Objects) {
+			GUILayout.BeginHorizontal();
+			GUILayout.Label("");
+			if (GUILayout.Button("+", GUILayout.Width(30))) {
+				
+			}
+			GUILayout.EndHorizontal();
 		}
 
 		EditorGUILayout.Space();

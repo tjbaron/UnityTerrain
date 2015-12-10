@@ -78,6 +78,8 @@ public static class SegmentGenerator {
 					addedHeight += d.height * Noise.Perlin(d.detail*p.x+d.seed,d.detail*p.y,d.detail*p.z) * strength;
 				} else if (d.noise == NOISE.Worley) {
 					addedHeight += d.height * Noise.Worley(d.detail*p.x+d.seed,d.detail*p.y,d.detail*p.z) * strength;
+				} else if (d.noise == NOISE.FractalMapped) {
+					addedHeight += d.height * Noise.FractalMapped(d.detail*p.x+d.seed,d.detail*p.y,d.detail*p.z) * strength;
 				} else {
 					var np = PTHelpers.GetHeightmapCoord(p);
 					addedHeight += d.height * d.texture.GetPixelBilinear(np.x, np.y).grayscale;

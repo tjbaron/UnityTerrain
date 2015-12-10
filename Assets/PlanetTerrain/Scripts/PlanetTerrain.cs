@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 public class PlanetTerrain : MonoBehaviour {
 	public PlanetData planet = new PlanetData();
+	public MaterialHandler materials = new MaterialHandler();
 
 	private bool busy = false;
 	public List<PlanetTerrainSegment> segments = new List<PlanetTerrainSegment>();
@@ -37,8 +38,8 @@ public class PlanetTerrain : MonoBehaviour {
 		busy = true;
 		if (planet.waterSphere != null && planet.waterHeight > 0f) {
 			water = Instantiate(planet.waterSphere);
-			water.localScale *= (planet.radius+planet.waterHeight)/1000f;
-			water.parent = transform;
+			water.parent = transform; water.localPosition = Vector3.zero;
+			water.localRotation = Quaternion.identity; water.localScale = new Vector3(1f,1f,1f)*(planet.radius+planet.waterHeight)/1000f;
 			water.gameObject.hideFlags = HideFlags.HideInHierarchy;
 			water.GetComponent<Renderer>().material = planet.waterMaterial;
 		}
@@ -49,8 +50,10 @@ public class PlanetTerrain : MonoBehaviour {
 			sd.bottomLeft = PTHelpers.cubeSides[i][2]; sd.bottomRight = PTHelpers.cubeSides[i][3];
 			sd.uvMin = Vector2.zero; sd.uvMax = new Vector2(1f,1f);
 
-			var go = new GameObject();
-			go.GetComponent<Transform>().parent = transform;
+			var go = new GameObject(); var tr = go.GetComponent<Transform>();
+			tr.parent = transform; tr.localPosition = Vector3.zero;
+			tr.localRotation = Quaternion.identity; tr.localScale = new Vector3(1f,1f,1f);
+
 			var seg = go.AddComponent<PlanetTerrainSegment>();
 			segments.Add(seg);
 			if (Application.isPlaying) {

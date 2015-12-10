@@ -19,8 +19,8 @@ public class PlanetTerrainSegment : MonoBehaviour {
 			p = d.planet;
 		}
 
-		if (mr == null) {
-			//Debug.Log(d.subdivision);
+		if (mr == null && !isEnabled) {
+			Debug.Log(d.subdivision);
 			// Generate this segment.
 			gameObject.hideFlags = HideFlags.HideInHierarchy;
 			if (Application.isPlaying) {
@@ -119,8 +119,9 @@ public class PlanetTerrainSegment : MonoBehaviour {
 
 		for (var i=0; i<segCorners.Length; i++) {
 			var d2 = d.subdivCopy(segCorners[i], uvCorners[i]);
-			var go = new GameObject();
-			go.GetComponent<Transform>().parent = transform;
+			var go = new GameObject(); var tr = go.GetComponent<Transform>();
+			tr.parent = transform; tr.localPosition = Vector3.zero;
+			tr.localRotation = Quaternion.identity; tr.localScale = new Vector3(1f,1f,1f);
 			var seg = go.AddComponent<PlanetTerrainSegment>();
 			segments.Add(seg);
 			if (Application.isPlaying) {
@@ -168,7 +169,7 @@ public class PlanetTerrainSegment : MonoBehaviour {
 
 	private void UpdateVisibility() {
 		var horizonAngle = Mathf.Acos(p.radius/Camera.main.transform.position.magnitude) * Mathf.Rad2Deg;
-		if (!Application.isPlaying || PTHelpers.GetAngle(d) < horizonAngle+1f) {
+		if (!Application.isPlaying || PTHelpers.GetAngle(d) < horizonAngle+15f) {
 			isVisible = true;
 			if (!mr.enabled) {
 				mr.enabled = true;

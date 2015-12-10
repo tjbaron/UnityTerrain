@@ -47,4 +47,14 @@ public static class Noise {
 		}
 		return Mathf.Clamp01(dist/1.5f);
 	}
+
+	public static float FractalMapped(float i, float j, float q) {
+		var v = Noise.Perlin(i, j, q);
+		var f = Mathf.Lerp(0.5f,0f, Mathf.Abs(v-0.5f)*20f);
+		v = Noise.Perlin(8f+(i*2f), j*2f, q*2f);
+		f+= Mathf.Lerp(0.3f,0f, Mathf.Abs(v-0.5f)*10f);
+		v = Noise.Perlin(16f+(i*4f), j*4f, q*4f);
+		f+= Mathf.Lerp(0.2f,0f, Mathf.Abs(v-0.5f)*5f);
+		return f;
+	}
 }
