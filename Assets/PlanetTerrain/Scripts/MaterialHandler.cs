@@ -13,9 +13,9 @@ public class MaterialHandler {
 
 	public float textureTransition = 0f;
 	
-	void Refresh(Transform transform, PlanetData p) {
+	public void Refresh(Transform transform, PlanetData p) {
 		Camera.main.depthTextureMode = DepthTextureMode.Depth;
-		if (mat = null) {
+		if (mat == null) {
 			mat = new Material(Shader.Find("Terrain/HeightTexture"));
 		}
 		waterMat = p.waterMaterial;

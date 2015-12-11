@@ -6,7 +6,9 @@ public static class Noise {
 		float t = 1f-Mathf.Abs(v);
 		return 3*Mathf.Pow(t,2f) - 2*Mathf.Pow(t,3f);
 	}
-	public static float Perlin(float x, float y, float z, bool fast=false) {
+	/*	Setting fast to true cuts this operations execution to a third. So we recommend using it whenever possible.
+	*/
+	public static float Perlin(float x, float y, float z, bool fast=true) {
 		var x0 = (int)Mathf.Floor(x);
 		var y0 = (int)Mathf.Floor(y);
 		var z0 = (int)Mathf.Floor(z);
@@ -17,9 +19,14 @@ public static class Noise {
 				for (var k=0; k<2; k++) {
 					Random.seed = (int)((x0+i) + ((y0+j)*1000) + ((z0+k)*1000000));
 					var dist = new Vector3(x-((float)x0+i), y-((float)y0+j), z-((float)z0+k));
-					var val = Vector3.Dot(dist, Random.insideUnitSphere.normalized);
-					if (fast) total += val*(1f-Mathf.Abs(dist.x))*(1f-Mathf.Abs(dist.y))*(1f-Mathf.Abs(dist.z));
-					else total += val*interp(dist.x)*interp(dist.y)*interp(dist.z);
+					if (fast) {
+						// Not normalizing cuts execution by an additional 30% (after already cutting it in half by not using interp).
+						var val = Vector3.Dot(dist, Random.insideUnitSphere);
+						total += val*(1f-Mathf.Abs(dist.x))*(1f-Mathf.Abs(dist.y))*(1f-Mathf.Abs(dist.z));
+					} else {
+						var val = Vector3.Dot(dist, Random.insideUnitSphere.normalized);
+						total += val*interp(dist.x)*interp(dist.y)*interp(dist.z);
+					}
 				}
 			}
 		}
@@ -36,7 +43,7 @@ public static class Noise {
 			for (var j=0; j<3; j++) {
 				for (var k=0; k<3; k++) {
 					Random.seed = (int)((x0+i) + ((y0+j)*1000) + ((z0+k)*1000000));
-					int cells = (int)Mathf.Floor(Random.value*3f);
+					int cells = (int)Mathf.Floor(Random.value*2f);
 					for (var m=0; m<cells; m++) {
 						var p = new Vector3(x0+i+Random.value,y0+j+Random.value,z0+k+Random.value);
 						var nd = Vector3.Distance(pos,p);

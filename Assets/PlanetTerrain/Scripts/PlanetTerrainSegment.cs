@@ -42,7 +42,7 @@ public class PlanetTerrainSegment : MonoBehaviour {
 	public void Enable() {
 		isEnabled = true;
 		if (Application.isPlaying) {
-			mc.enabled = true;
+			if (mc != null) mc.enabled = true;
 			UpdateVisibility();
 		}
 	}
@@ -84,7 +84,7 @@ public class PlanetTerrainSegment : MonoBehaviour {
 					segments[0].Disable();
 					segments.RemoveAt(0);
 				}
-				mc.enabled = true;
+				if (mc != null) mc.enabled = true;
 				UpdateVisibility();
 			}
 		}
@@ -141,7 +141,7 @@ public class PlanetTerrainSegment : MonoBehaviour {
 				mr.enabled = false;
 				PTHelpers.segmentCount--;
 			}
-			mc.enabled = false;
+			if (mc != null) mc.enabled = false;
 		}
 	}
 
@@ -149,7 +149,7 @@ public class PlanetTerrainSegment : MonoBehaviour {
 		if (p.minSubdivisions-d.subdivision <= 0) {
 			var mf = gameObject.AddComponent<MeshFilter>();
 			mr = gameObject.AddComponent<MeshRenderer>();
-			mc = gameObject.AddComponent<MeshCollider>();
+			if (p.generateColliders) mc = gameObject.AddComponent<MeshCollider>();
 
 			if (Application.isPlaying || p.editorSubdivisions-d.subdivision != 0) {
 				mr.enabled = false;

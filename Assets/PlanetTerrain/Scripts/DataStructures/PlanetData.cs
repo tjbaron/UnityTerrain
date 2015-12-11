@@ -3,6 +3,7 @@ using System.Collections;
 
 [System.Serializable]
 public class PlanetData {
+	public bool generateColliders = true;
 	public Transform waterSphere;
 	public int segmentResolution = 8;
 	public int minSubdivisions = 1;

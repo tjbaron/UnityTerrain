@@ -16,7 +16,7 @@ public static class SegmentGenerator {
 		Vector2[] newUV = new Vector2[(res+1)*(res+1)];
 		int[] newTriangles = new int[res*res*3*2];
 
-		
+		Profiler.BeginSample("PlacingVertices");
 		for (int y=0; y<res+1; y++) {
 			for (int x=0; x<res+1; x++) {
 				var v = (y*(res+1))+x;
@@ -40,13 +40,17 @@ public static class SegmentGenerator {
 				//if (y%1024==0) yield return null;
 			}
 		}
+		Profiler.EndSample();
 
+		Profiler.BeginSample("CreatingMesh");
 		Mesh mesh = new Mesh();
 		mesh.vertices = newVertices;
 		mesh.triangles = newTriangles;
 		mesh.uv = newUV;
 		mesh.RecalculateNormals();
+		Profiler.EndSample();
 
+		Profiler.BeginSample("FixingNormals");
 		newNormals = mesh.normals;
 		for (var x=0; x<res+1; x++) {
 			newNormals[x] = FindNormal(d, x, 0);
@@ -60,10 +64,13 @@ public static class SegmentGenerator {
 			newNormals[i] = FindNormal(d, res, y);
 		}
 		mesh.normals = newNormals;
+		Profiler.EndSample();
 
-		yield return null;
+		Profiler.BeginSample("AssigningMesh");
 		mf.sharedMesh = mesh;
-		mc.sharedMesh = mf.sharedMesh;
+		if (mc != null) mc.sharedMesh = mf.sharedMesh;
+		Profiler.EndSample();
+		yield return null;
 	}
 
 	public static float GetHeight(Vector3 p, float radius, DisplacementLayer[] displace) {

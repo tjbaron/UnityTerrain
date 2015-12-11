@@ -16,9 +16,9 @@ public class Ship : MonoBehaviour {
 	void Update () {
 		if (flying) {
 			if (Input.GetKey("space")) {
-				transform.Translate(10000f*Time.deltaTime,0f,0f);
+				transform.Translate(340f*Time.deltaTime,0f,0f);
 			} else {
-				transform.Translate(100f*Time.deltaTime,0f,0f);
+				transform.Translate(75f*Time.deltaTime,0f,0f);
 			}
 			
 			transform.Rotate(0f, (Input.mousePosition.x-(Screen.width/2f))*Time.deltaTime/3f, (Input.mousePosition.y-(Screen.height/2f))*Time.deltaTime/3f);

@@ -11,6 +11,7 @@
 		_LightTex ("Light (RGB)", 2D) = "white" {}
 		_CentrePoint ("Centre", Vector) = (0, 0, 0, 0)
 		_BlendThreshold ("Blend Distance", Float) = 3.0
+		_MainTexUsage ("Tex Use", Int) = 0
 	}
 	SubShader {
 		Tags { "RenderType"="Opaque" }
