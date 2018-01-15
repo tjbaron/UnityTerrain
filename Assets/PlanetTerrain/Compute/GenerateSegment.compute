@@ -1,0 +1,66 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWTexture2D<float4> Result;
+
+float _Time;
+
+float rand(float3 co) {
+	return (frac(sin( dot(co.xyz, float3(12.9898,78.233,45.5432) )) * 43758.5453) * 2.0) - 1.0;
+}
+
+float perlin(float x, float y, float z) {
+	int x0 = floor(x); 
+	int y0 = floor(y);
+	int z0 = floor(z);
+	// Get vectors for 8 surrounding points.
+	float total = 0.0;
+	for (int i=0; i<2; i++) {
+		for (int j=0; j<2; j++) {
+			for (int k=0; k<2; k++) {
+				float3 vec = float3(
+					rand(float3(x0+i, y0+j, z0+k)),
+					rand(float3(x0+i+1000, y0+j, z0+k)),
+					rand(float3(x0+i+1000000, y0+j, z0+k))
+				);
+				vec = normalize(vec);
+				float3 dist = float3(x-((float)x0+i), y-((float)y0+j), z-((float)z0+k));
+				float val = dot(dist, vec);
+				total += val * (1.0-abs(dist.x)) * (1.0-abs(dist.y)) * (1.0-abs(dist.z));
+			}
+		}
+	}
+	return (total+1.0)/2.0;
+}
+
+[numthreads(8,8,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+	float4 ind = Result[id.xy];
+	
+	float per = 0.0;
+	for (int i=0; i<5; i++) {
+		float scale = 20*rand(float3(i,0,0));
+		per += perlin(id.x/scale, id.y/scale, i+_Time);
+	}
+	per /= 5.0;
+
+	float per2 = 0.0;
+	for (int i=0; i<5; i++) {
+		float scale = 20*rand(float3(i,0,0));
+		per2 += perlin(id.x/scale, id.y/scale, i+_Time+1000);
+	}
+	per2 /= 5.0;
+
+	float per3 = 0.0;
+	for (int i=0; i<5; i++) {
+		float scale = 20*rand(float3(i,0,0));
+		per3 += perlin(id.x/scale, id.y/scale, i+_Time+1000);
+	}
+	per3 /= 5.0;
+
+	Result[id.xy] = float4(per, per3, per2, 1.0);
+	//Result[id.xy] = rand(id.xyz);
+}
