@@ -13,6 +13,7 @@ public class PlanetTerrainEditor : Editor {
 
 	SerializedProperty r;
 
+	SerializedProperty simpleView;
 	SerializedProperty segmentResolution;
 	SerializedProperty minSubdivisions;
 	SerializedProperty maxSubdivisions;
@@ -34,6 +35,7 @@ public class PlanetTerrainEditor : Editor {
 		pt = (PlanetTerrain)target;
 
 		r = serializedObject.FindProperty("planet");
+		simpleView = serializedObject.FindProperty("simpleView");
 		segmentResolution = r.FindPropertyRelative("segmentResolution");
 		minSubdivisions = r.FindPropertyRelative("minSubdivisions");
 		maxSubdivisions = r.FindPropertyRelative("maxSubdivisions");
@@ -83,6 +85,7 @@ public class PlanetTerrainEditor : Editor {
 
 	void GeneralTab() {
 		EditorGUILayout.PropertyField(r.FindPropertyRelative("generateColliders"));
+		EditorGUILayout.PropertyField(simpleView);
 		EditorGUILayout.IntSlider(segmentResolution, 2, 64);
 		EditorGUILayout.IntSlider(minSubdivisions, 0, maxSubdivisions.intValue);
 		EditorGUILayout.IntSlider(maxSubdivisions, 0, 8);

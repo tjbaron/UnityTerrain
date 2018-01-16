@@ -1,0 +1,26 @@
+CURRENCY
+
+1 Unit / Minute -> Every Player
+-0.001% Interest Rate / Minute
+10% Sales Tax
+
+16*24 = 1440 / Day
+100,000 = Equilibrium
+
+SPACE SHIP
+
+He3 - Used to generate power.
+Power - Power is used to run our systems.
+Life Support - Prevents Brain Damage.
+Shields - Can be depleted or overloaded.
+Gravity Matrix - Prevents muscular atrophy and walking if faster than floating.
+
+HUMAN
+
+Muscular Atrophy - Affects run speed. High gravity injures people with muscular atrophy.
+Brain Damage - Slows reflexes. Blurs vision.
+
+SPACE STATION
+
+Hull Polarization
+Gravity Matrix

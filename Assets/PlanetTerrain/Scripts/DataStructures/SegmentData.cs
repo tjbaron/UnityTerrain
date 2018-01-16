@@ -11,6 +11,7 @@ public class SegmentData {
 	public Vector3 bottomRight;
 	public Vector2 uvMin;
 	public Vector2 uvMax;
+	public Texture2D texture;
 	public SegmentData subdivCopy(Vector3[] corners, Vector2[] uvs) {
 		var d = new SegmentData();
 		d.planet = planet;

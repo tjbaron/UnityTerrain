@@ -7,6 +7,26 @@ public static class SegmentGenerator {
 		return t*b + (1-t)*a;
 	}
 
+	public static Texture2D GenerateTexture(SegmentData d) {
+		var s = 512;
+		var rad = d.planet.radius;
+		Color[] cd = new Color[s*s];
+		for (int y=0; y<s; y++) {
+			for (int x=0; x<s; x++) {
+				var v = (y*s)+x;
+				Vector3 p = Lerp(
+					Lerp(d.topLeft, d.topRight, x/(float)(s-1)),
+					Lerp(d.bottomLeft, d.bottomRight, x/(float)(s-1)),
+					y/(float)(s-1)).normalized;
+				cd[v].a = 1f;
+				cd[v].r = (GetHeight(p, rad, d.planet.displacementLayers)-rad)/300f;
+			}
+		}
+		Texture2D t = new Texture2D(s,s);
+		t.SetPixels(cd);
+		return t;
+	}
+
 	public static IEnumerator Generate(SegmentData d, MeshFilter mf, MeshCollider mc) {
 		var res = d.planet.segmentResolution;
 		var rad = d.planet.radius;

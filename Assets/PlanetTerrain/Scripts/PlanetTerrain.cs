@@ -1,9 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.IO;
 using System.Collections.Generic;
 
 public class PlanetTerrain : MonoBehaviour {
 	public PlanetData planet = new PlanetData();
+	public bool simpleView = true;
 	public MaterialHandler materials = new MaterialHandler();
 
 	private bool busy = false;
@@ -40,7 +42,7 @@ public class PlanetTerrain : MonoBehaviour {
 			water = Instantiate(planet.waterSphere);
 			water.parent = transform; water.localPosition = Vector3.zero;
 			water.localRotation = Quaternion.identity; water.localScale = new Vector3(1f,1f,1f)*(planet.radius+planet.waterHeight)/1000f;
-			water.gameObject.hideFlags = HideFlags.HideInHierarchy;
+			if (simpleView) water.gameObject.hideFlags = HideFlags.HideInHierarchy;
 			water.GetComponent<Renderer>().material = planet.waterMaterial;
 		}
 		for (var i=0; i<6; i++) {
@@ -49,6 +51,15 @@ public class PlanetTerrain : MonoBehaviour {
 			sd.topLeft = PTHelpers.cubeSides[i][0]; sd.topRight = PTHelpers.cubeSides[i][1];
 			sd.bottomLeft = PTHelpers.cubeSides[i][2]; sd.bottomRight = PTHelpers.cubeSides[i][3];
 			sd.uvMin = Vector2.zero; sd.uvMax = new Vector2(1f,1f);
+
+			if (!Application.isPlaying) {
+				var t = SegmentGenerator.GenerateTexture(sd);
+				byte[] bytes = t.EncodeToPNG();
+				File.WriteAllBytes(Application.dataPath + "/../Planet"+i.ToString()+".png", bytes);
+				t.Apply();
+				sd.texture = t;
+				materials.heightTexture = t;
+			}
 
 			var go = new GameObject(); var tr = go.GetComponent<Transform>();
 			tr.parent = transform; tr.localPosition = Vector3.zero;
